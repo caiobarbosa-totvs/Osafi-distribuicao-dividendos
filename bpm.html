@@ -17,10 +17,14 @@
       width: 100%;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f4f6f8;
+      overflow: hidden; /* Evita barras de rolagem indesejadas */
     }
     #canvas {
-      width: 100%;
-      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background: white;
       cursor: grab;
     }
@@ -84,6 +88,7 @@
         <bpmn:flowNodeRef>Task_PlanFin</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_SolAta</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_AssinAta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Assinada</bpmn:flowNodeRef>
       </bpmn:lane>
       <bpmn:lane id="Lane_Diretoria" name="Diretoria (Aprovação)">
         <bpmn:flowNodeRef>Task_AprovConselho</bpmn:flowNodeRef>
@@ -121,6 +126,7 @@
     
     <bpmn:userTask id="Task_PlanFin" name="Planejamento Financeiro">
       <bpmn:incoming>Flow_Start_PlanFin</bpmn:incoming>
+      <bpmn:incoming>Flow_VerifSaldo_Retorno</bpmn:incoming>
       <bpmn:outgoing>Flow_PlanFin_AprovConselho</bpmn:outgoing>
     </bpmn:userTask>
     
@@ -190,16 +196,23 @@
     <!-- CAMINHO B: DISTRIBUIÇÃO REGULAR -->
     <bpmn:userTask id="Task_SolAta" name="Solicitação de Ata">
       <bpmn:incoming>Flow_Decisao_Regular</bpmn:incoming>
+      <bpmn:incoming>Flow_Gateway_SolAta</bpmn:incoming>
       <bpmn:outgoing>Flow_SolAta_AssinAta</bpmn:outgoing>
     </bpmn:userTask>
 
     <bpmn:userTask id="Task_AssinAta" name="Assinatura de Ata">
       <bpmn:incoming>Flow_SolAta_AssinAta</bpmn:incoming>
-      <bpmn:outgoing>Flow_AssinAta_ProvFinan</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AssinAta_Gateway</bpmn:outgoing>
     </bpmn:userTask>
 
+    <bpmn:exclusiveGateway id="Gateway_Assinada" name="Ata Assinada?">
+      <bpmn:incoming>Flow_AssinAta_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Gateway_ProvFinan</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Gateway_SolAta</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
     <bpmn:userTask id="Task_ProvFinan" name="Provisões Financeiras">
-      <bpmn:incoming>Flow_AssinAta_ProvFinan</bpmn:incoming>
+      <bpmn:incoming>Flow_Gateway_ProvFinan</bpmn:incoming>
       <bpmn:outgoing>Flow_ProvFinan_IntRMReg</bpmn:outgoing>
     </bpmn:userTask>
 
@@ -224,10 +237,11 @@
     </bpmn:serviceTask>
 
     <!-- FASE FINAL E CONVERGÊNCIA -->
-    <bpmn:exclusiveGateway id="Gateway_VerifSaldo" name="Verificação de Saldo">
+    <bpmn:exclusiveGateway id="Gateway_VerifSaldo" name="Saldo Existente?">
       <bpmn:incoming>Flow_ConcCont_VerifSaldo</bpmn:incoming>
       <bpmn:incoming>Flow_IntContReg_VerifSaldo</bpmn:incoming>
       <bpmn:outgoing>Flow_VerifSaldo_Fim</bpmn:outgoing>
+      <bpmn:outgoing>Flow_VerifSaldo_Retorno</bpmn:outgoing>
     </bpmn:exclusiveGateway>
 
     <bpmn:endEvent id="EndEvent_1" name="Fim Concluído">
@@ -255,16 +269,22 @@
     <bpmn:sequenceFlow id="Flow_IntCont_ConcCont" sourceRef="Task_IntContabil" targetRef="Task_ConcContabil" />
     <bpmn:sequenceFlow id="Flow_ConcCont_VerifSaldo" sourceRef="Task_ConcContabil" targetRef="Gateway_VerifSaldo" />
 
-    <!-- CONEXÕES CAMINHO B -->
+    <!-- CONEXÕES CAMINHO B E LOOPS -->
     <bpmn:sequenceFlow id="Flow_SolAta_AssinAta" sourceRef="Task_SolAta" targetRef="Task_AssinAta" />
-    <bpmn:sequenceFlow id="Flow_AssinAta_ProvFinan" sourceRef="Task_AssinAta" targetRef="Task_ProvFinan" />
+    
+    <bpmn:sequenceFlow id="Flow_AssinAta_Gateway" sourceRef="Task_AssinAta" targetRef="Gateway_Assinada" />
+    <bpmn:sequenceFlow id="Flow_Gateway_ProvFinan" name="Sim" sourceRef="Gateway_Assinada" targetRef="Task_ProvFinan" />
+    <bpmn:sequenceFlow id="Flow_Gateway_SolAta" name="Não" sourceRef="Gateway_Assinada" targetRef="Task_SolAta" />
+    
     <bpmn:sequenceFlow id="Flow_ProvFinan_IntRMReg" sourceRef="Task_ProvFinan" targetRef="Task_IntRMRegular" />
     <bpmn:sequenceFlow id="Flow_IntRMReg_ProgPagReg" sourceRef="Task_IntRMRegular" targetRef="Task_ProgPagRegular" />
     <bpmn:sequenceFlow id="Flow_ProgPagReg_ConcFinReg" sourceRef="Task_ProgPagRegular" targetRef="Task_ConcFinRegular" />
     <bpmn:sequenceFlow id="Flow_ConcFinReg_IntContReg" sourceRef="Task_ConcFinRegular" targetRef="Task_IntContRegular" />
     <bpmn:sequenceFlow id="Flow_IntContReg_VerifSaldo" sourceRef="Task_IntContRegular" targetRef="Gateway_VerifSaldo" />
 
-    <bpmn:sequenceFlow id="Flow_VerifSaldo_Fim" sourceRef="Gateway_VerifSaldo" targetRef="EndEvent_1" />
+    <!-- FECHAMENTO E LOOP DE SALDO -->
+    <bpmn:sequenceFlow id="Flow_VerifSaldo_Fim" name="Não" sourceRef="Gateway_VerifSaldo" targetRef="EndEvent_1" />
+    <bpmn:sequenceFlow id="Flow_VerifSaldo_Retorno" name="Sim, possui saldo" sourceRef="Gateway_VerifSaldo" targetRef="Task_PlanFin" />
     
   </bpmn:process>
 
@@ -273,23 +293,23 @@
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
       
       <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">
-        <dc:Bounds x="10" y="10" width="1600" height="1000" />
+        <dc:Bounds x="10" y="10" width="1700" height="1000" />
       </bpmndi:BPMNShape>
       
       <bpmndi:BPMNShape id="Lane_Planejamento_di" bpmnElement="Lane_Planejamento" isHorizontal="true">
-        <dc:Bounds x="40" y="10" width="1570" height="200" />
+        <dc:Bounds x="40" y="10" width="1670" height="200" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Lane_Diretoria_di" bpmnElement="Lane_Diretoria" isHorizontal="true">
-        <dc:Bounds x="40" y="210" width="1570" height="200" />
+        <dc:Bounds x="40" y="210" width="1670" height="200" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Lane_Controladoria_di" bpmnElement="Lane_Controladoria" isHorizontal="true">
-        <dc:Bounds x="40" y="410" width="1570" height="200" />
+        <dc:Bounds x="40" y="410" width="1670" height="200" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Lane_Financeiro_di" bpmnElement="Lane_Financeiro" isHorizontal="true">
-        <dc:Bounds x="40" y="610" width="1570" height="200" />
+        <dc:Bounds x="40" y="610" width="1670" height="200" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Lane_Sistemas_di" bpmnElement="Lane_Sistemas" isHorizontal="true">
-        <dc:Bounds x="40" y="810" width="1570" height="200" />
+        <dc:Bounds x="40" y="810" width="1670" height="200" />
       </bpmndi:BPMNShape>
 
       <!-- Nodes Start & Setup -->
@@ -363,35 +383,40 @@
         <dc:Bounds x="630" y="68" width="100" height="80" />
       </bpmndi:BPMNShape>
 
+      <bpmndi:BPMNShape id="Gateway_Assinada_di" bpmnElement="Gateway_Assinada" isMarkerVisible="true">
+        <dc:Bounds x="755" y="83" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="748" y="140" width="70" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
       <bpmndi:BPMNShape id="Task_ProvFinan_di" bpmnElement="Task_ProvFinan">
-        <dc:Bounds x="780" y="730" width="100" height="80" />
+        <dc:Bounds x="880" y="730" width="100" height="80" />
       </bpmndi:BPMNShape>
 
       <bpmndi:BPMNShape id="Task_IntRMRegular_di" bpmnElement="Task_IntRMRegular">
-        <dc:Bounds x="930" y="870" width="100" height="80" />
+        <dc:Bounds x="1030" y="870" width="100" height="80" />
       </bpmndi:BPMNShape>
 
       <bpmndi:BPMNShape id="Task_ProgPagRegular_di" bpmnElement="Task_ProgPagRegular">
-        <dc:Bounds x="1080" y="730" width="100" height="80" />
+        <dc:Bounds x="1180" y="730" width="100" height="80" />
       </bpmndi:BPMNShape>
 
       <bpmndi:BPMNShape id="Task_ConcFinRegular_di" bpmnElement="Task_ConcFinRegular">
-        <dc:Bounds x="1230" y="730" width="100" height="80" />
+        <dc:Bounds x="1330" y="730" width="100" height="80" />
       </bpmndi:BPMNShape>
 
       <bpmndi:BPMNShape id="Task_IntContRegular_di" bpmnElement="Task_IntContRegular">
-        <dc:Bounds x="1380" y="870" width="100" height="80" />
+        <dc:Bounds x="1480" y="870" width="100" height="80" />
       </bpmndi:BPMNShape>
 
       <!-- Nodes Final Convergence -->
       <bpmndi:BPMNShape id="Gateway_VerifSaldo_di" bpmnElement="Gateway_VerifSaldo" isMarkerVisible="true">
         <dc:Bounds x="1500" y="685" width="50" height="50" />
-        <bpmndi:BPMNLabel><dc:Bounds x="1490" y="742" width="70" height="27" /></bpmndi:BPMNLabel>
+        <bpmndi:BPMNLabel><dc:Bounds x="1455" y="735" width="85" height="14" /></bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
 
       <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
-        <dc:Bounds x="1550" y="620" width="36" height="36" />
-        <bpmndi:BPMNLabel><dc:Bounds x="1532" y="596" width="71" height="14" /></bpmndi:BPMNLabel>
+        <dc:Bounds x="1600" y="692" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1582" y="735" width="71" height="14" /></bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
 
       <!-- Edges Setup -->
@@ -491,49 +516,74 @@
         <di:waypoint x="630" y="108" />
       </bpmndi:BPMNEdge>
 
-      <bpmndi:BPMNEdge id="Flow_AssinAta_ProvFinan_di" bpmnElement="Flow_AssinAta_ProvFinan">
+      <bpmndi:BPMNEdge id="Flow_AssinAta_Gateway_di" bpmnElement="Flow_AssinAta_Gateway">
         <di:waypoint x="730" y="108" />
         <di:waypoint x="755" y="108" />
-        <di:waypoint x="755" y="770" />
-        <di:waypoint x="780" y="770" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Gateway_ProvFinan_di" bpmnElement="Flow_Gateway_ProvFinan">
+        <di:waypoint x="805" y="108" />
+        <di:waypoint x="830" y="108" />
+        <di:waypoint x="830" y="770" />
+        <di:waypoint x="880" y="770" />
+        <bpmndi:BPMNLabel><dc:Bounds x="838" y="440" width="19" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Gateway_SolAta_di" bpmnElement="Flow_Gateway_SolAta">
+        <di:waypoint x="780" y="83" />
+        <di:waypoint x="780" y="40" />
+        <di:waypoint x="530" y="40" />
+        <di:waypoint x="530" y="68" />
+        <bpmndi:BPMNLabel><dc:Bounds x="645" y="22" width="20" height="14" /></bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
 
       <bpmndi:BPMNEdge id="Flow_ProvFinan_IntRMReg_di" bpmnElement="Flow_ProvFinan_IntRMReg">
-        <di:waypoint x="880" y="770" />
-        <di:waypoint x="905" y="770" />
-        <di:waypoint x="905" y="910" />
-        <di:waypoint x="930" y="910" />
+        <di:waypoint x="980" y="770" />
+        <di:waypoint x="1005" y="770" />
+        <di:waypoint x="1005" y="910" />
+        <di:waypoint x="1030" y="910" />
       </bpmndi:BPMNEdge>
 
       <bpmndi:BPMNEdge id="Flow_IntRMReg_ProgPagReg_di" bpmnElement="Flow_IntRMReg_ProgPagReg">
-        <di:waypoint x="1030" y="910" />
-        <di:waypoint x="1055" y="910" />
-        <di:waypoint x="1055" y="770" />
-        <di:waypoint x="1080" y="770" />
+        <di:waypoint x="1130" y="910" />
+        <di:waypoint x="1155" y="910" />
+        <di:waypoint x="1155" y="770" />
+        <di:waypoint x="1180" y="770" />
       </bpmndi:BPMNEdge>
 
       <bpmndi:BPMNEdge id="Flow_ProgPagReg_ConcFinReg_di" bpmnElement="Flow_ProgPagReg_ConcFinReg">
-        <di:waypoint x="1180" y="770" />
-        <di:waypoint x="1230" y="770" />
+        <di:waypoint x="1280" y="770" />
+        <di:waypoint x="1330" y="770" />
       </bpmndi:BPMNEdge>
 
       <bpmndi:BPMNEdge id="Flow_ConcFinReg_IntContReg_di" bpmnElement="Flow_ConcFinReg_IntContReg">
-        <di:waypoint x="1330" y="770" />
-        <di:waypoint x="1355" y="770" />
-        <di:waypoint x="1355" y="910" />
-        <di:waypoint x="1380" y="910" />
+        <di:waypoint x="1430" y="770" />
+        <di:waypoint x="1455" y="770" />
+        <di:waypoint x="1455" y="910" />
+        <di:waypoint x="1480" y="910" />
       </bpmndi:BPMNEdge>
 
       <bpmndi:BPMNEdge id="Flow_IntContReg_VerifSaldo_di" bpmnElement="Flow_IntContReg_VerifSaldo">
-        <di:waypoint x="1480" y="910" />
-        <di:waypoint x="1525" y="910" />
+        <di:waypoint x="1580" y="910" />
+        <di:waypoint x="1605" y="910" />
+        <di:waypoint x="1605" y="800" />
+        <di:waypoint x="1525" y="800" />
         <di:waypoint x="1525" y="735" />
       </bpmndi:BPMNEdge>
 
+      <!-- Edges Loop Verif Saldo -->
       <bpmndi:BPMNEdge id="Flow_VerifSaldo_Fim_di" bpmnElement="Flow_VerifSaldo_Fim">
+        <di:waypoint x="1550" y="710" />
+        <di:waypoint x="1600" y="710" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1565" y="692" width="20" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_VerifSaldo_Retorno_di" bpmnElement="Flow_VerifSaldo_Retorno">
         <di:waypoint x="1525" y="685" />
-        <di:waypoint x="1525" y="638" />
-        <di:waypoint x="1550" y="638" />
+        <di:waypoint x="1525" y="30" />
+        <di:waypoint x="200" y="30" />
+        <di:waypoint x="200" y="68" />
+        <bpmndi:BPMNLabel><dc:Bounds x="825" y="12" width="75" height="27" /></bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
 
     </bpmndi:BPMNPlane>
@@ -549,8 +599,15 @@
     viewer.importXML(bpmnXML).then(function(result) {
       const canvas = viewer.get('canvas');
       
-      // Ajusta o zoom para encaixar o diagrama inteiro na tela inicial
-      canvas.zoom('fit-viewport');
+      // Um pequeno atraso garante que o container renderizou sua largura/altura no iframe
+      setTimeout(function() {
+          try {
+              canvas.zoom('fit-viewport');
+          } catch(e) {
+              console.warn('Fallback do zoom acionado', e);
+              canvas.zoom(1);
+          }
+      }, 50);
       
     }).catch(function(err) {
       console.error('Erro ao renderizar o diagrama', err);

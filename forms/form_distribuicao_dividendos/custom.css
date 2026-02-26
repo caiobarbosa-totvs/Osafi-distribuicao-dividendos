@@ -3,39 +3,127 @@
    Objetivo: Garantir a regra do Style Guide e aplicar a identidade visual (OSAFI).
    ========================================================================== */
 .fluig-style-guide {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     color: #333333;
-    
 
-    background-color: #fbfbfb; 
+
+    background-color: #fbfbfb;
     padding: 15px;
     border-radius: 4px;
 }
 
 .fluig-style-guide .page-header {
-    border-bottom: 3px solid #000000; 
+    background-color: #004a8d;
+    /* Azul institucional sugestivo */
+    color: white;
+    padding: 15px;
+    font-size: 20px;
+    font-weight: bold;
+    border-radius: 5px 5px 0 0;
+    text-align: center;
+
+
+
+    /*border-bottom: 3px solid #000000; 
     padding-bottom: 12px;
     margin-top: 10px;
     margin-bottom: 30px;
     color: #1a1a1a;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1px;*/
 }
 
 /* ==========================================================================
-   BLOCO 2: PAIN�IS ESTRUTURAIS (ETAPAS DO WORKFLOW)
+   TIMELINE / BARRA DE PROGRESSO
+   ========================================================================== */
+.barraProgresso-wrapper {
+    display: flex;
+    justify-content: center;
+    margin: 40px 0 60px 0;
+    /* Aumentei a margem inferior para caber os textos multiline */
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Arial, sans-serif;
+}
+
+.barraProgresso-container {
+    position: relative;
+    width: 95%;
+    /* Aumentado para ganhar respiro */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.barraProgresso {
+    position: absolute;
+    top: 10px;
+    /* Alinhado ao centro da bolinha de 20px */
+    width: 100%;
+    height: 4px;
+    /* Mais fina para um look mais clean/Fluig */
+    background: #e0e0e0;
+    z-index: 1;
+}
+
+.barraProgresso-step {
+    width: 20px;
+    height: 20px;
+    background: #bbb;
+    border-radius: 50%;
+    position: relative;
+    z-index: 2;
+    transition: all 0.4s ease;
+    cursor: pointer;
+}
+
+.barraProgresso-step.active {
+    background: #006ec7;
+    /* Azul Padrão Fluig */
+    box-shadow: 0 0 0 5px rgba(0, 110, 199, 0.2);
+}
+
+/* AJUSTE CHAVE: O Título */
+.barraProgresso-step .title {
+    position: absolute;
+    top: 30px;
+    /* Espaço abaixo da bolinha */
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #666;
+    font-weight: 600;
+    text-align: center;
+    width: 100px;
+    /* Força o texto a quebrar linha se for muito grande */
+    line-height: 1.2;
+    display: block;
+}
+
+.barraProgresso-step.active .title {
+    color: #006ec7;
+}
+
+/* Responsividade Básica */
+@media (max-width: 768px) {
+    .barraProgresso-step .title {
+        display: none;
+        /* Esconde textos em telas muito pequenas para não encavalar */
+    }
+}
+
+/* ==========================================================================
+   BLOCO 2: PAINÃ‰IS ESTRUTURAIS (ETAPAS DO WORKFLOW)
    Objetivo: Diferenciar visualmente cada etapa (raia) do processo.
    ========================================================================== */
 
-.fluig-style-guide .panel-primary > .panel-heading {
+.fluig-style-guide .panel-primary>.panel-heading {
     background-color: #004578;
     border-color: #004578;
     color: #ffffff;
 }
 
-.fluig-style-guide .panel-default > .panel-heading {
-    background-color: #f5f5f5; 
+.fluig-style-guide .panel-default>.panel-heading {
+    background-color: #f5f5f5;
     border-top: 3px solid #004578;
     color: #333333;
 }
@@ -53,25 +141,25 @@
 }
 
 /* ==========================================================================
-   BLOCO 3: TIPOS DE INPUTS E ESTADOS DE FORMUL�RIO
-   Objetivo: Formatar campos espec�ficos, moedas, c�lculos e bloqueios por etapa.
+   BLOCO 3: TIPOS DE INPUTS E ESTADOS DE FORMULÃ�RIO
+   Objetivo: Formatar campos especÃ­ficos, moedas, cÃ¡lculos e bloqueios por etapa.
    ========================================================================== */
 
-.fluig-style-guide input.money, 
+.fluig-style-guide input.money,
 .fluig-style-guide input.percent {
-    text-align: right; 
+    text-align: right;
     font-weight: bold;
     color: #1a1a1a;
     background-color: #fffdfa;
 }
 
-.fluig-style-guide input[readonly], 
-.fluig-style-guide textarea[readonly], 
+.fluig-style-guide input[readonly],
+.fluig-style-guide textarea[readonly],
 .fluig-style-guide select[readonly] {
     background-color: #e9ecef !important;
     border-color: #ced4da !important;
     color: #495057 !important;
-    cursor: not-allowed; 
+    cursor: not-allowed;
 }
 
 .fluig-style-guide #alertaLimite {
@@ -81,26 +169,26 @@
 
 .fluig-style-guide .text-danger strong {
     background-color: #f8d7da;
-    color: #721c24; 
+    color: #721c24;
     padding: 6px 12px;
     border-radius: 4px;
     display: inline-block;
     border: 1px solid #f5c6cb;
     font-size: 13px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* ==========================================================================
    BLOCO 4: GRIDS DE DADOS (TABELAS PAI-FILHO)
-   Objetivo: Estilizar as tabelas din�micas de S�cios e Pagamentos Financeiros.
+   Objetivo: Estilizar as tabelas dinÃ¢micas de SÃ³cios e Pagamentos Financeiros.
    ========================================================================== */
 
 .fluig-style-guide table thead th {
-    background-color: #f4f6f8; 
-    color: #004578; 
+    background-color: #f4f6f8;
+    color: #004578;
     font-weight: 700;
     vertical-align: middle !important;
-    text-align: center; 
+    text-align: center;
     border-bottom: 2px solid #004578 !important;
 }
 
@@ -109,18 +197,18 @@
     margin-bottom: 20px;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .fluig-style-guide table tbody td input,
 .fluig-style-guide table tbody td select {
-    width: 100%; 
+    width: 100%;
     height: 34px;
     box-sizing: border-box;
 }
 
 .fluig-style-guide table tbody td input[readonly] {
-    border: 1px solid transparent !important; 
+    border: 1px solid transparent !important;
     background-color: transparent !important;
     font-weight: bold;
     text-align: center;
@@ -129,17 +217,17 @@
 /* ==========================================================================
    
    BLOCO 4: GRIDS DE DADOS (TABELAS PAI-FILHO)
-   Objetivo: Estilizar as tabelas din�micas de S�cios e Pagamentos Financeiros.
+   Objetivo: Estilizar as tabelas dinÃ¢micas de SÃ³cios e Pagamentos Financeiros.
    
    ========================================================================== */
 
-/* Cabe�alho das tabelas de Rateio de S�cios e Execu��o Financeira */
+/* CabeÃ§alho das tabelas de Rateio de SÃ³cios e ExecuÃ§Ã£o Financeira */
 .fluig-style-guide table thead th {
     background-color: #f4f6f8;
-    color: #004578; 
+    color: #004578;
     font-weight: 700;
     vertical-align: middle !important;
-    text-align: center; 
+    text-align: center;
     border-bottom: 2px solid #004578 !important;
 }
 
@@ -149,21 +237,22 @@
     margin-bottom: 20px;
     border: 1px solid #e0e0e0;
     border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Sombra super leve para destacar a tabela do fundo branco */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    /* Sombra super leve para destacar a tabela do fundo branco */
 }
 
-/* Inputs dentro das linhas da tabela para n�o quebrarem o layout */
+/* Inputs dentro das linhas da tabela para nÃ£o quebrarem o layout */
 .fluig-style-guide table tbody td input,
 .fluig-style-guide table tbody td select {
     width: 100%;
-    height: 34px; 
+    height: 34px;
     box-sizing: border-box;
 }
 
 /* Tratamento visual para inputs calculados/bloqueados DENTRO do grid */
-/* Ex: "Valor a Receber" preenchido automaticamente pela % de participa��o */
+/* Ex: "Valor a Receber" preenchido automaticamente pela % de participaÃ§Ã£o */
 .fluig-style-guide table tbody td input[readonly] {
-    border: 1px solid transparent !important; 
+    border: 1px solid transparent !important;
     background-color: transparent !important;
     font-weight: bold;
     text-align: center;
@@ -171,12 +260,12 @@
 
 /* ==========================================================================
 
-   BLOCO 5: ELEMENTOS DE SELE��O (CHECKLISTS E DECIS�ES)
-   Objetivo: Melhorar a usabilidade dos checklists da Controladoria e aprova��o da Diretoria.
+   BLOCO 5: ELEMENTOS DE SELEÃ‡ÃƒO (CHECKLISTS E DECISÃ•ES)
+   Objetivo: Melhorar a usabilidade dos checklists da Controladoria e aprovaÃ§Ã£o da Diretoria.
    
    ========================================================================== */
 
-/* Espa�amento e alinhamento de Checkboxes (Ex: Checklist Fiscal e Assinantes da Ata) */
+/* EspaÃ§amento e alinhamento de Checkboxes (Ex: Checklist Fiscal e Assinantes da Ata) */
 .fluig-style-guide .checkbox label {
     font-size: 14px;
     color: #333333;
@@ -186,7 +275,7 @@
     display: block;
 }
 
-/* Espa�amento e alinhamento de Radio Buttons (Ex: Origem do Lucro e Decis�o Diretoria) */
+/* EspaÃ§amento e alinhamento de Radio Buttons (Ex: Origem do Lucro e DecisÃ£o Diretoria) */
 .fluig-style-guide .radio label {
     font-size: 14px;
     color: #333333;
@@ -195,8 +284,8 @@
     font-weight: normal;
 }
 
-/* Efeito Hover (Intera��o visual ao passar o mouse) */
-/* Ajuda o usu�rio (ex: Diretor ou Analista) a saber exatamente qual op��o est� prestes a clicar */
+/* Efeito Hover (InteraÃ§Ã£o visual ao passar o mouse) */
+/* Ajuda o usuÃ¡rio (ex: Diretor ou Analista) a saber exatamente qual opÃ§Ã£o estÃ¡ prestes a clicar */
 .fluig-style-guide .checkbox label:hover,
 .fluig-style-guide .radio label:hover {
     color: #004578;
@@ -204,8 +293,8 @@
     transition: all 0.2s ease-in-out;
 }
 
-/* Distanciamento geral das caixas de op��o em rela��o aos t�tulos e labels */
-.fluig-style-guide .checkbox, 
+/* Distanciamento geral das caixas de opÃ§Ã£o em relaÃ§Ã£o aos tÃ­tulos e labels */
+.fluig-style-guide .checkbox,
 .fluig-style-guide .radio {
     margin-top: 8px;
     padding-left: 5px;

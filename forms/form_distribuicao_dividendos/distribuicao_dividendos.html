@@ -1,45 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
+
 <head>
+    <meta charset="UTF-8">
     <title>Distribuição de Dividendos</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+
     <!-- Imports Obrigatórios Fluig Style Guide -->
     <link rel="stylesheet" type="text/css" href="/style-guide/css/fluig-style-guide-flat.min.css">
     <script src="/portal/resources/js/jquery/jquery.js"></script>
     <script src="/portal/resources/js/jquery/jquery-ui.min.js"></script>
     <script src="/portal/resources/js/mustache/mustache-min.js"></script>
     <script src="/style-guide/js/fluig-style-guide.min.js"></script>
-    
+
     <!-- Arquivos Customizados (Criaremos nas próximas etapas) -->
     <link rel="stylesheet" type="text/css" href="custom.css">
 </head>
+
 <body>
     <!-- Todo o formulário deve estar dentro desta div -->
     <div class="fluig-style-guide">
         <form name="form" role="form">
-            
+
+
+
             <div class="container-fluid">
                 <h2 class="page-header">Distribuição de Dividendos</h2>
-                
+
+                <!-- Componente Timeline -->
+                <div class="barraProgresso-wrapper">
+                    <div class="barraProgresso-container">
+                        <div class="barraProgresso"></div>
+
+                        <div id="step-inicio" class="barraProgresso-step active" data-step="0">
+                            <div class="title">Início</div>
+                        </div>
+
+                        <div id="step-planejamento" class="barraProgresso-step" data-step="1">
+                            <div class="title">Planejamento Financeiro</div>
+                        </div>
+
+                        <div id="step-distribuicao" class="barraProgresso-step" data-step="2">
+                            <div class="title">Distribuição por Sócio</div>
+                        </div>
+
+                        <div id="step-aprovacao-dir" class="barraProgresso-step" data-step="3">
+                            <div class="title">Aprovação da Diretoria</div>
+                        </div>
+
+                        <div id="step-av-controladoria" class="barraProgresso-step" data-step="4">
+                            <div class="title">Avaliação Técnica - Controladoria</div>
+                        </div>
+
+                        <div id="step-solicitacao-ata" class="barraProgresso-step" data-step="5">
+                            <div class="title">Solicitação e Geração de Ata</div>
+                        </div>
+
+                        <div id="step-execucao" class="barraProgresso-step" data-step="6">
+                            <div class="title">Execução Financeira e Pagamento</div>
+                        </div>
+
+                        <div id="step-fim" class="barraProgresso-step" data-step="7">
+                            <div class="title">Fim</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fim - Componente Timeline -->
+
                 <!-- ======================================================= -->
                 <!-- PAINEL 1: PLANEJAMENTO FINANCEIRO - DADOS TRIBUTÁRIOS   -->
                 <!-- ======================================================= -->
                 <div class="panel panel-primary" id="panelPlanejamento">
                     <div class="panel-heading">
                         <h3 class="panel-title">
-                            <i class="flaticon flaticon-calculator icon-sm"></i> 
+                            <i class="flaticon flaticon-calculator icon-sm"></i>
                             1. Planejamento Financeiro - Dados Tributários e Origem
                         </h3>
                     </div>
                     <div class="panel-body">
-                        
+
                         <!-- Linha 1: Ano e Regime -->
                         <div class="row">
                             <div class="form-group col-md-3">
                                 <label for="anoReferencia">Ano de Referência</label>
-                                <input type="number" class="form-control" name="anoReferencia" id="anoReferencia" placeholder="Ex: 2025">
+                                <input type="number" class="form-control" name="anoReferencia" id="anoReferencia"
+                                    placeholder="Ex: 2025">
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="regimeTributario">Regime Tributário</label>
@@ -56,15 +102,18 @@
                         <div class="row">
                             <div class="form-group col-md-4">
                                 <label for="receitaBruta">Receita Bruta do Período (R$)</label>
-                                <input type="text" class="form-control money" name="receitaBruta" id="receitaBruta" placeholder="0,00">
+                                <input type="text" class="form-control money" name="receitaBruta" id="receitaBruta"
+                                    placeholder="0,00">
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="basePresumida">Base de Cálculo Presumida (%)</label>
-                                <input type="number" class="form-control" name="basePresumida" id="basePresumida" placeholder="Ex: 32">
+                                <input type="number" class="form-control" name="basePresumida" id="basePresumida"
+                                    placeholder="Ex: 32">
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="limiteIsento">Limite Isento Lei 9.249/95 (R$)</label>
-                                <input type="text" class="form-control" name="limiteIsento" id="limiteIsento" readonly placeholder="Cálculo Automático">
+                                <input type="text" class="form-control" name="limiteIsento" id="limiteIsento" readonly
+                                    placeholder="Cálculo Automático">
                             </div>
                         </div>
 
@@ -93,7 +142,8 @@
                         <div class="row">
                             <div class="form-group col-md-4">
                                 <label for="valorProposto">Valor Proposto para Distribuição (R$)</label>
-                                <input type="text" class="form-control money" name="valorProposto" id="valorProposto" placeholder="0,00">
+                                <input type="text" class="form-control money" name="valorProposto" id="valorProposto"
+                                    placeholder="0,00">
                                 <!-- Elemento oculto para a mensagem de alerta -->
                                 <span id="alertaLimite" class="text-danger" style="display:none;">
                                     <strong>⚠ Excede Limite Isento - Necessária Escrituração Contábil</strong>
@@ -101,10 +151,11 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="centroCusto">Centro de Custos</label>
-                                <input type="text" class="form-control" name="centroCusto" id="centroCusto" placeholder="Digite ou selecione...">
+                                <input type="text" class="form-control" name="centroCusto" id="centroCusto"
+                                    placeholder="Digite ou selecione...">
                             </div>
                         </div>
-                        
+
                     </div>
                 </div> <!-- Fim Painel 1 -->
                 <!-- ======================================================= -->
@@ -113,14 +164,15 @@
                 <div class="panel panel-default" id="panelSocios">
                     <div class="panel-heading">
                         <h3 class="panel-title">
-                            <i class="flaticon flaticon-users icon-sm"></i> 
+                            <i class="flaticon flaticon-users icon-sm"></i>
                             2. Distribuição por Sócio
                         </h3>
                     </div>
                     <div class="panel-body">
-                        
+
                         <div class="table-responsive">
-                            <table class="table table-bordered table-striped" tablename="tabela_socios" id="tabela_socios" noaddbutton="true">
+                            <table class="table table-bordered table-striped" tablename="tabela_socios"
+                                id="tabela_socios" noaddbutton="true">
                                 <thead>
                                     <tr>
                                         <th style="width: 25%">Nome / Razão Social do Sócio</th>
@@ -136,22 +188,26 @@
                                             <input type="text" class="form-control" name="nomeSocio" id="nomeSocio">
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" name="cpfCnpjSocio" id="cpfCnpjSocio">
+                                            <input type="text" class="form-control" name="cpfCnpjSocio"
+                                                id="cpfCnpjSocio">
                                         </td>
                                         <td>
-                                            <input type="number" class="form-control percent" name="percSocio" id="percSocio">
+                                            <input type="number" class="form-control percent" name="percSocio"
+                                                id="percSocio">
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control money" name="valorSocio" id="valorSocio">
+                                            <input type="text" class="form-control money" name="valorSocio"
+                                                id="valorSocio">
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" name="dadosBancariosSocio" id="dadosBancariosSocio" placeholder="Banco, Agência, Conta">
+                                            <input type="text" class="form-control" name="dadosBancariosSocio"
+                                                id="dadosBancariosSocio" placeholder="Banco, Agência, Conta">
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         <!-- Botão para adicionar nova linha nativo do Fluig Style Guide -->
                         <div class="row">
                             <div class="col-md-12">
@@ -163,19 +219,19 @@
 
                     </div>
                 </div> <!-- Fim Painel 2 -->
-                
-                                <!-- ======================================================= -->
+
+                <!-- ======================================================= -->
                 <!-- PAINEL 3: APROVAÇÃO DA DIRETORIA                        -->
                 <!-- ======================================================= -->
                 <div class="panel panel-default" id="panelDiretoria">
                     <div class="panel-heading">
                         <h3 class="panel-title">
-                            <i class="flaticon flaticon-check-circle icon-sm"></i> 
+                            <i class="flaticon flaticon-check-circle icon-sm"></i>
                             3. Aprovação da Diretoria
                         </h3>
                     </div>
                     <div class="panel-body">
-                        
+
                         <!-- Linha 1: Decisão e Motivo de Rejeição -->
                         <div class="row">
                             <div class="form-group col-md-4">
@@ -193,10 +249,11 @@
                                     </label>
                                 </div>
                             </div>
-                            
+
                             <!-- Esta div será exibida via JavaScript apenas se a decisão for "Rejeitar" -->
                             <div class="form-group col-md-8" id="divMotivoRejeicao" style="display: none;">
-                                <label for="motivoRejeicaoDir">Motivo da Rejeição (Obrigatório em caso de recusa)</label>
+                                <label for="motivoRejeicaoDir">Motivo da Rejeição (Obrigatório em caso de
+                                    recusa)</label>
                                 <select class="form-control" name="motivoRejeicaoDir" id="motivoRejeicaoDir">
                                     <option value="">Selecione o motivo...</option>
                                     <option value="Fluxo de caixa insuficiente">Fluxo de caixa insuficiente</option>
@@ -211,7 +268,8 @@
                         <div class="row">
                             <div class="form-group col-md-12">
                                 <label for="obsDiretoria">Observações da Diretoria</label>
-                                <textarea class="form-control" name="obsDiretoria" id="obsDiretoria" rows="3" placeholder="Digite considerações adicionais..."></textarea>
+                                <textarea class="form-control" name="obsDiretoria" id="obsDiretoria" rows="3"
+                                    placeholder="Digite considerações adicionais..."></textarea>
                             </div>
                         </div>
 
@@ -224,12 +282,12 @@
                 <div class="panel panel-default" id="panelControladoria">
                     <div class="panel-heading">
                         <h3 class="panel-title">
-                            <i class="flaticon flaticon-list icon-sm"></i> 
+                            <i class="flaticon flaticon-list icon-sm"></i>
                             4. Avaliação Técnica - Controladoria
                         </h3>
                     </div>
                     <div class="panel-body">
-                        
+
                         <!-- Linha 1: Checklist -->
                         <div class="row">
                             <div class="form-group col-md-12">
@@ -270,13 +328,15 @@
                             </div>
                             <div class="form-group col-md-8">
                                 <label for="parecerControladoria">Parecer da Controladoria / Recomendações</label>
-                                <textarea class="form-control" name="parecerControladoria" id="parecerControladoria" rows="3" placeholder="Digite o parecer técnico, recomendações ou ressalvas..."></textarea>
+                                <textarea class="form-control" name="parecerControladoria" id="parecerControladoria"
+                                    rows="3"
+                                    placeholder="Digite o parecer técnico, recomendações ou ressalvas..."></textarea>
                             </div>
                         </div>
 
                     </div>
                 </div> <!-- Fim Painel 4 -->
-                
+
                 <!-- ======================================================= -->
                 <!-- PAINEL 5: SOLICITAÇÃO DE ATA (DISTRIBUIÇÃO REGULAR)     -->
                 <!-- ======================================================= -->
@@ -284,12 +344,12 @@
                 <div class="panel panel-default" id="panelAta" style="display: none;">
                     <div class="panel-heading">
                         <h3 class="panel-title">
-                            <i class="flaticon flaticon-document icon-sm"></i> 
+                            <i class="flaticon flaticon-document icon-sm"></i>
                             5. Solicitação e Geração de Ata
                         </h3>
                     </div>
                     <div class="panel-body">
-                        
+
                         <!-- Linha 1: Dados Gerais da Ata -->
                         <div class="row">
                             <div class="form-group col-md-4">
@@ -298,7 +358,8 @@
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="localAta">Local</label>
-                                <input type="text" class="form-control" name="localAta" id="localAta" placeholder="Ex: Sede da Empresa">
+                                <input type="text" class="form-control" name="localAta" id="localAta"
+                                    placeholder="Ex: Sede da Empresa">
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="horarioAta">Horário</label>
@@ -310,15 +371,18 @@
                         <div class="row">
                             <div class="form-group col-md-4">
                                 <label for="periodoReferenciaAta">Período de Referência (De/Até)</label>
-                                <input type="text" class="form-control" name="periodoReferenciaAta" id="periodoReferenciaAta" placeholder="Ex: 01/01/2024 a 31/12/2024">
+                                <input type="text" class="form-control" name="periodoReferenciaAta"
+                                    id="periodoReferenciaAta" placeholder="Ex: 01/01/2024 a 31/12/2024">
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="resultadoLiquido">Resultado Líquido do Exercício (R$)</label>
-                                <input type="text" class="form-control money" name="resultadoLiquido" id="resultadoLiquido" placeholder="0,00">
+                                <input type="text" class="form-control money" name="resultadoLiquido"
+                                    id="resultadoLiquido" placeholder="0,00">
                             </div>
                             <div class="form-group col-md-4">
                                 <label for="totalDisponivel">Total Disponível para Distribuição (R$)</label>
-                                <input type="text" class="form-control money" name="totalDisponivel" id="totalDisponivel" placeholder="0,00">
+                                <input type="text" class="form-control money" name="totalDisponivel"
+                                    id="totalDisponivel" placeholder="0,00">
                             </div>
                         </div>
 
@@ -330,20 +394,23 @@
                                 <label>Assinantes (Integração Qualysign)</label>
                                 <div class="checkbox">
                                     <label>
-                                        <input type="checkbox" name="assinaturaRepresentante" id="assinaturaRepresentante" value="sim">
+                                        <input type="checkbox" name="assinaturaRepresentante"
+                                            id="assinaturaRepresentante" value="sim">
                                         Representante Legal (Obrigatório)
                                     </label>
                                 </div>
                                 <div class="checkbox">
                                     <label>
-                                        <input type="checkbox" name="assinaturaFinanceiro" id="assinaturaFinanceiro" value="sim">
+                                        <input type="checkbox" name="assinaturaFinanceiro" id="assinaturaFinanceiro"
+                                            value="sim">
                                         Gerente Financeiro (Opcional)
                                     </label>
                                 </div>
                             </div>
                             <div class="form-group col-md-8">
                                 <label for="justificativaAta">Justificativa da Distribuição e Impacto Financeiro</label>
-                                <textarea class="form-control" name="justificativaAta" id="justificativaAta" rows="3" placeholder="Detalhes para constar no documento legal..."></textarea>
+                                <textarea class="form-control" name="justificativaAta" id="justificativaAta" rows="3"
+                                    placeholder="Detalhes para constar no documento legal..."></textarea>
                             </div>
                         </div>
 
@@ -357,14 +424,15 @@
                 <div class="panel panel-default" id="panelFinanceiro" style="display: none;">
                     <div class="panel-heading">
                         <h3 class="panel-title">
-                            <i class="flaticon flaticon-card icon-sm"></i> 
+                            <i class="flaticon flaticon-card icon-sm"></i>
                             6. Execução Financeira e Pagamento
                         </h3>
                     </div>
                     <div class="panel-body">
-                        
+
                         <div class="table-responsive">
-                            <table class="table table-bordered table-striped" tablename="tabela_pagamentos" id="tabela_pagamentos" noaddbutton="true">
+                            <table class="table table-bordered table-striped" tablename="tabela_pagamentos"
+                                id="tabela_pagamentos" noaddbutton="true">
                                 <thead>
                                     <tr>
                                         <th style="width: 25%">Sócio Favorecido</th>
@@ -378,10 +446,12 @@
                                     <tr>
                                         <td>
                                             <!-- Campo preenchido via JS espelhando o Painel 2 -->
-                                            <input type="text" class="form-control" name="pagFavorecido" id="pagFavorecido" readonly>
+                                            <input type="text" class="form-control" name="pagFavorecido"
+                                                id="pagFavorecido" readonly>
                                         </td>
                                         <td>
-                                            <input type="date" class="form-control" name="pagDataProgramada" id="pagDataProgramada">
+                                            <input type="date" class="form-control" name="pagDataProgramada"
+                                                id="pagDataProgramada">
                                         </td>
                                         <td>
                                             <select class="form-control" name="pagStatus" id="pagStatus">
@@ -391,20 +461,23 @@
                                             </select>
                                         </td>
                                         <td>
-                                            <input type="date" class="form-control" name="pagDataEfetiva" id="pagDataEfetiva">
+                                            <input type="date" class="form-control" name="pagDataEfetiva"
+                                                id="pagDataEfetiva">
                                         </td>
                                         <td>
-                                            <input type="text" class="form-control" name="pagProtocolo" id="pagProtocolo" placeholder="Automático ou Manual">
+                                            <input type="text" class="form-control" name="pagProtocolo"
+                                                id="pagProtocolo" placeholder="Automático ou Manual">
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         <!-- Botão de adicionar linha no Grid de Pagamentos -->
                         <div class="row">
                             <div class="col-md-12">
-                                <button type="button" class="btn btn-primary" onclick="wdkAddChild('tabela_pagamentos')">
+                                <button type="button" class="btn btn-primary"
+                                    onclick="wdkAddChild('tabela_pagamentos')">
                                     <i class="flaticon flaticon-add-plus icon-sm"></i> Adicionar Programação
                                 </button>
                             </div>
@@ -419,4 +492,5 @@
     <!-- Import do JS Customizado (Criaremos na etapa de validações) -->
     <!-- <script type="text/javascript" src="distribuicao_dividendos.js"></script> -->
 </body>
+
 </html>
