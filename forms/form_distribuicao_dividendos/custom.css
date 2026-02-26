@@ -1,0 +1,212 @@
+/* ==========================================================================
+   BLOCO 1: ENCAPSULAMENTO TOTVS E IDENTIDADE GLOBAL
+   Objetivo: Garantir a regra do Style Guide e aplicar a identidade visual (OSAFI).
+   ========================================================================== */
+.fluig-style-guide {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+    color: #333333;
+    
+
+    background-color: #fbfbfb; 
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.fluig-style-guide .page-header {
+    border-bottom: 3px solid #000000; 
+    padding-bottom: 12px;
+    margin-top: 10px;
+    margin-bottom: 30px;
+    color: #1a1a1a;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ==========================================================================
+   BLOCO 2: PAINÉIS ESTRUTURAIS (ETAPAS DO WORKFLOW)
+   Objetivo: Diferenciar visualmente cada etapa (raia) do processo.
+   ========================================================================== */
+
+.fluig-style-guide .panel-primary > .panel-heading {
+    background-color: #004578;
+    border-color: #004578;
+    color: #ffffff;
+}
+
+.fluig-style-guide .panel-default > .panel-heading {
+    background-color: #f5f5f5; 
+    border-top: 3px solid #004578;
+    color: #333333;
+}
+
+.fluig-style-guide .panel-title {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.fluig-style-guide .panel-title i {
+    margin-right: 8px;
+    font-size: 18px;
+    vertical-align: middle;
+}
+
+/* ==========================================================================
+   BLOCO 3: TIPOS DE INPUTS E ESTADOS DE FORMULÁRIO
+   Objetivo: Formatar campos específicos, moedas, cálculos e bloqueios por etapa.
+   ========================================================================== */
+
+.fluig-style-guide input.money, 
+.fluig-style-guide input.percent {
+    text-align: right; 
+    font-weight: bold;
+    color: #1a1a1a;
+    background-color: #fffdfa;
+}
+
+.fluig-style-guide input[readonly], 
+.fluig-style-guide textarea[readonly], 
+.fluig-style-guide select[readonly] {
+    background-color: #e9ecef !important;
+    border-color: #ced4da !important;
+    color: #495057 !important;
+    cursor: not-allowed; 
+}
+
+.fluig-style-guide #alertaLimite {
+    display: block;
+    margin-top: 5px;
+}
+
+.fluig-style-guide .text-danger strong {
+    background-color: #f8d7da;
+    color: #721c24; 
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid #f5c6cb;
+    font-size: 13px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* ==========================================================================
+   BLOCO 4: GRIDS DE DADOS (TABELAS PAI-FILHO)
+   Objetivo: Estilizar as tabelas dinâmicas de Sócios e Pagamentos Financeiros.
+   ========================================================================== */
+
+.fluig-style-guide table thead th {
+    background-color: #f4f6f8; 
+    color: #004578; 
+    font-weight: 700;
+    vertical-align: middle !important;
+    text-align: center; 
+    border-bottom: 2px solid #004578 !important;
+}
+
+.fluig-style-guide .table-responsive {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.fluig-style-guide table tbody td input,
+.fluig-style-guide table tbody td select {
+    width: 100%; 
+    height: 34px;
+    box-sizing: border-box;
+}
+
+.fluig-style-guide table tbody td input[readonly] {
+    border: 1px solid transparent !important; 
+    background-color: transparent !important;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* ==========================================================================
+   
+   BLOCO 4: GRIDS DE DADOS (TABELAS PAI-FILHO)
+   Objetivo: Estilizar as tabelas dinâmicas de Sócios e Pagamentos Financeiros.
+   
+   ========================================================================== */
+
+/* Cabeçalho das tabelas de Rateio de Sócios e Execução Financeira */
+.fluig-style-guide table thead th {
+    background-color: #f4f6f8;
+    color: #004578; 
+    font-weight: 700;
+    vertical-align: middle !important;
+    text-align: center; 
+    border-bottom: 2px solid #004578 !important;
+}
+
+/* Container responsivo das tabelas (bordas e margens) */
+.fluig-style-guide .table-responsive {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Sombra super leve para destacar a tabela do fundo branco */
+}
+
+/* Inputs dentro das linhas da tabela para não quebrarem o layout */
+.fluig-style-guide table tbody td input,
+.fluig-style-guide table tbody td select {
+    width: 100%;
+    height: 34px; 
+    box-sizing: border-box;
+}
+
+/* Tratamento visual para inputs calculados/bloqueados DENTRO do grid */
+/* Ex: "Valor a Receber" preenchido automaticamente pela % de participação */
+.fluig-style-guide table tbody td input[readonly] {
+    border: 1px solid transparent !important; 
+    background-color: transparent !important;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* ==========================================================================
+
+   BLOCO 5: ELEMENTOS DE SELEÇÃO (CHECKLISTS E DECISÕES)
+   Objetivo: Melhorar a usabilidade dos checklists da Controladoria e aprovação da Diretoria.
+   
+   ========================================================================== */
+
+/* Espaçamento e alinhamento de Checkboxes (Ex: Checklist Fiscal e Assinantes da Ata) */
+.fluig-style-guide .checkbox label {
+    font-size: 14px;
+    color: #333333;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-weight: normal;
+    display: block;
+}
+
+/* Espaçamento e alinhamento de Radio Buttons (Ex: Origem do Lucro e Decisão Diretoria) */
+.fluig-style-guide .radio label {
+    font-size: 14px;
+    color: #333333;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+/* Efeito Hover (Interação visual ao passar o mouse) */
+/* Ajuda o usuário (ex: Diretor ou Analista) a saber exatamente qual opção está prestes a clicar */
+.fluig-style-guide .checkbox label:hover,
+.fluig-style-guide .radio label:hover {
+    color: #004578;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Distanciamento geral das caixas de opção em relação aos títulos e labels */
+.fluig-style-guide .checkbox, 
+.fluig-style-guide .radio {
+    margin-top: 8px;
+    padding-left: 5px;
+}
