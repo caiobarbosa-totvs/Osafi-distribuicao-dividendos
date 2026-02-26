@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visualizador BPMN - Distribuição de Dividendos</title>
+  
+  <!-- CSS do bpmn-js -->
+  <link rel="stylesheet" href="https://unpkg.com/bpmn-js@11.5.0/dist/assets/diagram-js.css" />
+  <link rel="stylesheet" href="https://unpkg.com/bpmn-js@11.5.0/dist/assets/bpmn-font/css/bpmn-embedded.css" />
+  
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      width: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f8;
+    }
+    #canvas {
+      width: 100%;
+      height: 100vh;
+      background: white;
+      cursor: grab;
+    }
+    #canvas:active {
+      cursor: grabbing;
+    }
+    .header {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border-left: 5px solid #006ec7;
+    }
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      color: #333;
+    }
+    p {
+      margin: 5px 0 0;
+      font-size: 13px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Processo: Distribuição de Dividendos</h1>
+    <p>Role o mouse para dar zoom, clique e arraste para mover pelo fluxo.</p>
+  </div>
+
+  <div id="canvas"></div>
+
+  <!-- Script do bpmn-js viewer -->
+  <script src="https://unpkg.com/bpmn-js@11.5.0/dist/bpmn-navigated-viewer.development.js"></script>
+
+  <script>
+    // O XML do diagrama gerado
+    const bpmnXML = `<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" 
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" 
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" 
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" 
+                  id="Definitions_1" 
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  
+  <bpmn:collaboration id="Collaboration_1">
+    <bpmn:participant id="Participant_1" name="Distribuição de Dividendos" processRef="distribuicao_dividendos" />
+  </bpmn:collaboration>
+  
+  <bpmn:process id="distribuicao_dividendos" name="Distribuição de Dividendos" isExecutable="true">
+    
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_Planejamento" name="Planejamento Financeiro">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_PlanFin</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_SolAta</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AssinAta</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Diretoria" name="Diretoria (Aprovação)">
+        <bpmn:flowNodeRef>Task_AprovConselho</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Controladoria" name="Controladoria (Avaliação Técnica)">
+        <bpmn:flowNodeRef>Task_AvalTecnica</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Avaliada</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Error</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DecisaoAnt</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Financeiro" name="Financeiro (Pagamentos/Conciliação)">
+        <bpmn:flowNodeRef>Task_ProgPagamento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ValPagamento</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ConcFinan</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_AnexaComp</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ConcContabil</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ProvFinan</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ProgPagRegular</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_ConcFinRegular</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_VerifSaldo</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_1</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Sistemas" name="Sistemas / Integração (Automáticas)">
+        <bpmn:flowNodeRef>Task_IntRMTotvs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IntContabil</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IntRMRegular</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_IntContRegular</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- EVENTOS INICIAIS E TAREFAS -->
+    <bpmn:startEvent id="StartEvent_1" name="Início">
+      <bpmn:outgoing>Flow_Start_PlanFin</bpmn:outgoing>
+    </bpmn:startEvent>
+    
+    <bpmn:userTask id="Task_PlanFin" name="Planejamento Financeiro">
+      <bpmn:incoming>Flow_Start_PlanFin</bpmn:incoming>
+      <bpmn:outgoing>Flow_PlanFin_AprovConselho</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <bpmn:userTask id="Task_AprovConselho" name="Aprovação do Conselho">
+      <bpmn:incoming>Flow_PlanFin_AprovConselho</bpmn:incoming>
+      <bpmn:outgoing>Flow_AprovConselho_AvalTecnica</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <bpmn:userTask id="Task_AvalTecnica" name="Avaliação Técnica">
+      <bpmn:incoming>Flow_AprovConselho_AvalTecnica</bpmn:incoming>
+      <bpmn:outgoing>Flow_AvalTecnica_Gateway</bpmn:outgoing>
+    </bpmn:userTask>
+    
+    <bpmn:exclusiveGateway id="Gateway_Avaliada" name="Aprovado pela Controladoria?">
+      <bpmn:incoming>Flow_AvalTecnica_Gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_Avaliada_Decisao</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Avaliada_Erro</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="EndEvent_Error" name="Cancelado (Erro)">
+      <bpmn:incoming>Flow_Avaliada_Erro</bpmn:incoming>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_1" />
+    </bpmn:endEvent>
+    
+    <bpmn:exclusiveGateway id="Gateway_DecisaoAnt" name="Decisão de Antecipação">
+      <bpmn:incoming>Flow_Avaliada_Decisao</bpmn:incoming>
+      <bpmn:outgoing>Flow_Decisao_Antecipacao</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Decisao_Regular</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- CAMINHO A: ANTECIPAÇÃO -->
+    <bpmn:serviceTask id="Task_IntRMTotvs" name="Integração RM Totvs">
+      <bpmn:incoming>Flow_Decisao_Antecipacao</bpmn:incoming>
+      <bpmn:outgoing>Flow_IntRM_ProgPag</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Task_ProgPagamento" name="Programação de Pagamento">
+      <bpmn:incoming>Flow_IntRM_ProgPag</bpmn:incoming>
+      <bpmn:outgoing>Flow_ProgPag_ValPag</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_ValPagamento" name="Validação de Pagamento">
+      <bpmn:incoming>Flow_ProgPag_ValPag</bpmn:incoming>
+      <bpmn:outgoing>Flow_ValPag_ConcFinan</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_ConcFinan" name="Conciliação Financeira">
+      <bpmn:incoming>Flow_ValPag_ConcFinan</bpmn:incoming>
+      <bpmn:outgoing>Flow_ConcFinan_Anexa</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_AnexaComp" name="Anexação de Comprovante">
+      <bpmn:incoming>Flow_ConcFinan_Anexa</bpmn:incoming>
+      <bpmn:outgoing>Flow_Anexa_IntCont</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_IntContabil" name="Integração Contábil">
+      <bpmn:incoming>Flow_Anexa_IntCont</bpmn:incoming>
+      <bpmn:outgoing>Flow_IntCont_ConcCont</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Task_ConcContabil" name="Conciliação Contábil">
+      <bpmn:incoming>Flow_IntCont_ConcCont</bpmn:incoming>
+      <bpmn:outgoing>Flow_ConcCont_VerifSaldo</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- CAMINHO B: DISTRIBUIÇÃO REGULAR -->
+    <bpmn:userTask id="Task_SolAta" name="Solicitação de Ata">
+      <bpmn:incoming>Flow_Decisao_Regular</bpmn:incoming>
+      <bpmn:outgoing>Flow_SolAta_AssinAta</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_AssinAta" name="Assinatura de Ata">
+      <bpmn:incoming>Flow_SolAta_AssinAta</bpmn:incoming>
+      <bpmn:outgoing>Flow_AssinAta_ProvFinan</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_ProvFinan" name="Provisões Financeiras">
+      <bpmn:incoming>Flow_AssinAta_ProvFinan</bpmn:incoming>
+      <bpmn:outgoing>Flow_ProvFinan_IntRMReg</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_IntRMRegular" name="Integração RM Totvs Regular">
+      <bpmn:incoming>Flow_ProvFinan_IntRMReg</bpmn:incoming>
+      <bpmn:outgoing>Flow_IntRMReg_ProgPagReg</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="Task_ProgPagRegular" name="Programação Pagamento Regular">
+      <bpmn:incoming>Flow_IntRMReg_ProgPagReg</bpmn:incoming>
+      <bpmn:outgoing>Flow_ProgPagReg_ConcFinReg</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="Task_ConcFinRegular" name="Conciliação Financeira Regular">
+      <bpmn:incoming>Flow_ProgPagReg_ConcFinReg</bpmn:incoming>
+      <bpmn:outgoing>Flow_ConcFinReg_IntContReg</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="Task_IntContRegular" name="Integração Contábil Regular">
+      <bpmn:incoming>Flow_ConcFinReg_IntContReg</bpmn:incoming>
+      <bpmn:outgoing>Flow_IntContReg_VerifSaldo</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <!-- FASE FINAL E CONVERGÊNCIA -->
+    <bpmn:exclusiveGateway id="Gateway_VerifSaldo" name="Verificação de Saldo">
+      <bpmn:incoming>Flow_ConcCont_VerifSaldo</bpmn:incoming>
+      <bpmn:incoming>Flow_IntContReg_VerifSaldo</bpmn:incoming>
+      <bpmn:outgoing>Flow_VerifSaldo_Fim</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:endEvent id="EndEvent_1" name="Fim Concluído">
+      <bpmn:incoming>Flow_VerifSaldo_Fim</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- FLUXOS DE SEQUÊNCIA (SETAS) -->
+    <bpmn:sequenceFlow id="Flow_Start_PlanFin" sourceRef="StartEvent_1" targetRef="Task_PlanFin" />
+    <bpmn:sequenceFlow id="Flow_PlanFin_AprovConselho" sourceRef="Task_PlanFin" targetRef="Task_AprovConselho" />
+    <bpmn:sequenceFlow id="Flow_AprovConselho_AvalTecnica" sourceRef="Task_AprovConselho" targetRef="Task_AvalTecnica" />
+    <bpmn:sequenceFlow id="Flow_AvalTecnica_Gateway" sourceRef="Task_AvalTecnica" targetRef="Gateway_Avaliada" />
+    
+    <bpmn:sequenceFlow id="Flow_Avaliada_Erro" name="Rejeitado" sourceRef="Gateway_Avaliada" targetRef="EndEvent_Error" />
+    <bpmn:sequenceFlow id="Flow_Avaliada_Decisao" name="Aprovado" sourceRef="Gateway_Avaliada" targetRef="Gateway_DecisaoAnt" />
+    
+    <bpmn:sequenceFlow id="Flow_Decisao_Antecipacao" name="Antecipação" sourceRef="Gateway_DecisaoAnt" targetRef="Task_IntRMTotvs" />
+    <bpmn:sequenceFlow id="Flow_Decisao_Regular" name="Distribuição Regular" sourceRef="Gateway_DecisaoAnt" targetRef="Task_SolAta" />
+    
+    <!-- CONEXÕES CAMINHO A -->
+    <bpmn:sequenceFlow id="Flow_IntRM_ProgPag" sourceRef="Task_IntRMTotvs" targetRef="Task_ProgPagamento" />
+    <bpmn:sequenceFlow id="Flow_ProgPag_ValPag" sourceRef="Task_ProgPagamento" targetRef="Task_ValPagamento" />
+    <bpmn:sequenceFlow id="Flow_ValPag_ConcFinan" sourceRef="Task_ValPagamento" targetRef="Task_ConcFinan" />
+    <bpmn:sequenceFlow id="Flow_ConcFinan_Anexa" sourceRef="Task_ConcFinan" targetRef="Task_AnexaComp" />
+    <bpmn:sequenceFlow id="Flow_Anexa_IntCont" sourceRef="Task_AnexaComp" targetRef="Task_IntContabil" />
+    <bpmn:sequenceFlow id="Flow_IntCont_ConcCont" sourceRef="Task_IntContabil" targetRef="Task_ConcContabil" />
+    <bpmn:sequenceFlow id="Flow_ConcCont_VerifSaldo" sourceRef="Task_ConcContabil" targetRef="Gateway_VerifSaldo" />
+
+    <!-- CONEXÕES CAMINHO B -->
+    <bpmn:sequenceFlow id="Flow_SolAta_AssinAta" sourceRef="Task_SolAta" targetRef="Task_AssinAta" />
+    <bpmn:sequenceFlow id="Flow_AssinAta_ProvFinan" sourceRef="Task_AssinAta" targetRef="Task_ProvFinan" />
+    <bpmn:sequenceFlow id="Flow_ProvFinan_IntRMReg" sourceRef="Task_ProvFinan" targetRef="Task_IntRMRegular" />
+    <bpmn:sequenceFlow id="Flow_IntRMReg_ProgPagReg" sourceRef="Task_IntRMRegular" targetRef="Task_ProgPagRegular" />
+    <bpmn:sequenceFlow id="Flow_ProgPagReg_ConcFinReg" sourceRef="Task_ProgPagRegular" targetRef="Task_ConcFinRegular" />
+    <bpmn:sequenceFlow id="Flow_ConcFinReg_IntContReg" sourceRef="Task_ConcFinRegular" targetRef="Task_IntContRegular" />
+    <bpmn:sequenceFlow id="Flow_IntContReg_VerifSaldo" sourceRef="Task_IntContRegular" targetRef="Gateway_VerifSaldo" />
+
+    <bpmn:sequenceFlow id="Flow_VerifSaldo_Fim" sourceRef="Gateway_VerifSaldo" targetRef="EndEvent_1" />
+    
+  </bpmn:process>
+
+  <!-- BPMNDI (VISUALIZAÇÃO / GRÁFICO DO DIAGRAMA) -->
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1">
+      
+      <bpmndi:BPMNShape id="Participant_1_di" bpmnElement="Participant_1" isHorizontal="true">
+        <dc:Bounds x="10" y="10" width="1600" height="1000" />
+      </bpmndi:BPMNShape>
+      
+      <bpmndi:BPMNShape id="Lane_Planejamento_di" bpmnElement="Lane_Planejamento" isHorizontal="true">
+        <dc:Bounds x="40" y="10" width="1570" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Diretoria_di" bpmnElement="Lane_Diretoria" isHorizontal="true">
+        <dc:Bounds x="40" y="210" width="1570" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Controladoria_di" bpmnElement="Lane_Controladoria" isHorizontal="true">
+        <dc:Bounds x="40" y="410" width="1570" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Financeiro_di" bpmnElement="Lane_Financeiro" isHorizontal="true">
+        <dc:Bounds x="40" y="610" width="1570" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Sistemas_di" bpmnElement="Lane_Sistemas" isHorizontal="true">
+        <dc:Bounds x="40" y="810" width="1570" height="200" />
+      </bpmndi:BPMNShape>
+
+      <!-- Nodes Start & Setup -->
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="80" y="90" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="84" y="133" width="28" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      
+      <bpmndi:BPMNShape id="Task_PlanFin_di" bpmnElement="Task_PlanFin">
+        <dc:Bounds x="150" y="68" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      
+      <bpmndi:BPMNShape id="Task_AprovConselho_di" bpmnElement="Task_AprovConselho">
+        <dc:Bounds x="150" y="270" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_AvalTecnica_di" bpmnElement="Task_AvalTecnica">
+        <dc:Bounds x="150" y="470" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Gateway_Avaliada_di" bpmnElement="Gateway_Avaliada" isMarkerVisible="true">
+        <dc:Bounds x="300" y="485" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="290" y="445" width="75" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EndEvent_Error_di" bpmnElement="EndEvent_Error">
+        <dc:Bounds x="307" y="560" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="286" y="603" width="81" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Gateway_DecisaoAnt_di" bpmnElement="Gateway_DecisaoAnt" isMarkerVisible="true">
+        <dc:Bounds x="400" y="485" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="390" y="542" width="70" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Nodes Path A -->
+      <bpmndi:BPMNShape id="Task_IntRMTotvs_di" bpmnElement="Task_IntRMTotvs">
+        <dc:Bounds x="480" y="870" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_ProgPagamento_di" bpmnElement="Task_ProgPagamento">
+        <dc:Bounds x="630" y="640" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_ValPagamento_di" bpmnElement="Task_ValPagamento">
+        <dc:Bounds x="780" y="640" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_ConcFinan_di" bpmnElement="Task_ConcFinan">
+        <dc:Bounds x="930" y="640" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_AnexaComp_di" bpmnElement="Task_AnexaComp">
+        <dc:Bounds x="1080" y="640" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_IntContabil_di" bpmnElement="Task_IntContabil">
+        <dc:Bounds x="1230" y="870" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_ConcContabil_di" bpmnElement="Task_ConcContabil">
+        <dc:Bounds x="1380" y="640" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Nodes Path B -->
+      <bpmndi:BPMNShape id="Task_SolAta_di" bpmnElement="Task_SolAta">
+        <dc:Bounds x="480" y="68" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_AssinAta_di" bpmnElement="Task_AssinAta">
+        <dc:Bounds x="630" y="68" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_ProvFinan_di" bpmnElement="Task_ProvFinan">
+        <dc:Bounds x="780" y="730" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_IntRMRegular_di" bpmnElement="Task_IntRMRegular">
+        <dc:Bounds x="930" y="870" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_ProgPagRegular_di" bpmnElement="Task_ProgPagRegular">
+        <dc:Bounds x="1080" y="730" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_ConcFinRegular_di" bpmnElement="Task_ConcFinRegular">
+        <dc:Bounds x="1230" y="730" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="Task_IntContRegular_di" bpmnElement="Task_IntContRegular">
+        <dc:Bounds x="1380" y="870" width="100" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Nodes Final Convergence -->
+      <bpmndi:BPMNShape id="Gateway_VerifSaldo_di" bpmnElement="Gateway_VerifSaldo" isMarkerVisible="true">
+        <dc:Bounds x="1500" y="685" width="50" height="50" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1490" y="742" width="70" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
+        <dc:Bounds x="1550" y="620" width="36" height="36" />
+        <bpmndi:BPMNLabel><dc:Bounds x="1532" y="596" width="71" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Edges Setup -->
+      <bpmndi:BPMNEdge id="Flow_Start_PlanFin_di" bpmnElement="Flow_Start_PlanFin">
+        <di:waypoint x="116" y="108" />
+        <di:waypoint x="150" y="108" />
+      </bpmndi:BPMNEdge>
+      
+      <bpmndi:BPMNEdge id="Flow_PlanFin_AprovConselho_di" bpmnElement="Flow_PlanFin_AprovConselho">
+        <di:waypoint x="200" y="148" />
+        <di:waypoint x="200" y="270" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_AprovConselho_AvalTecnica_di" bpmnElement="Flow_AprovConselho_AvalTecnica">
+        <di:waypoint x="200" y="350" />
+        <di:waypoint x="200" y="470" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_AvalTecnica_Gateway_di" bpmnElement="Flow_AvalTecnica_Gateway">
+        <di:waypoint x="250" y="510" />
+        <di:waypoint x="300" y="510" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Avaliada_Erro_di" bpmnElement="Flow_Avaliada_Erro">
+        <di:waypoint x="325" y="535" />
+        <di:waypoint x="325" y="560" />
+        <bpmndi:BPMNLabel><dc:Bounds x="330" y="543" width="46" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Avaliada_Decisao_di" bpmnElement="Flow_Avaliada_Decisao">
+        <di:waypoint x="350" y="510" />
+        <di:waypoint x="400" y="510" />
+        <bpmndi:BPMNLabel><dc:Bounds x="352" y="492" width="47" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Decisao_Antecipacao_di" bpmnElement="Flow_Decisao_Antecipacao">
+        <di:waypoint x="425" y="535" />
+        <di:waypoint x="425" y="910" />
+        <di:waypoint x="480" y="910" />
+        <bpmndi:BPMNLabel><dc:Bounds x="430" y="720" width="59" height="14" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Decisao_Regular_di" bpmnElement="Flow_Decisao_Regular">
+        <di:waypoint x="425" y="485" />
+        <di:waypoint x="425" y="108" />
+        <di:waypoint x="480" y="108" />
+        <bpmndi:BPMNLabel><dc:Bounds x="430" y="294" width="57" height="27" /></bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <!-- Edges Path A -->
+      <bpmndi:BPMNEdge id="Flow_IntRM_ProgPag_di" bpmnElement="Flow_IntRM_ProgPag">
+        <di:waypoint x="580" y="910" />
+        <di:waypoint x="605" y="910" />
+        <di:waypoint x="605" y="680" />
+        <di:waypoint x="630" y="680" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_ProgPag_ValPag_di" bpmnElement="Flow_ProgPag_ValPag">
+        <di:waypoint x="730" y="680" />
+        <di:waypoint x="780" y="680" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_ValPag_ConcFinan_di" bpmnElement="Flow_ValPag_ConcFinan">
+        <di:waypoint x="880" y="680" />
+        <di:waypoint x="930" y="680" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_ConcFinan_Anexa_di" bpmnElement="Flow_ConcFinan_Anexa">
+        <di:waypoint x="1030" y="680" />
+        <di:waypoint x="1080" y="680" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_Anexa_IntCont_di" bpmnElement="Flow_Anexa_IntCont">
+        <di:waypoint x="1180" y="680" />
+        <di:waypoint x="1205" y="680" />
+        <di:waypoint x="1205" y="910" />
+        <di:waypoint x="1230" y="910" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_IntCont_ConcCont_di" bpmnElement="Flow_IntCont_ConcCont">
+        <di:waypoint x="1330" y="910" />
+        <di:waypoint x="1355" y="910" />
+        <di:waypoint x="1355" y="680" />
+        <di:waypoint x="1380" y="680" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_ConcCont_VerifSaldo_di" bpmnElement="Flow_ConcCont_VerifSaldo">
+        <di:waypoint x="1480" y="680" />
+        <di:waypoint x="1490" y="680" />
+        <di:waypoint x="1490" y="710" />
+        <di:waypoint x="1500" y="710" />
+      </bpmndi:BPMNEdge>
+
+      <!-- Edges Path B -->
+      <bpmndi:BPMNEdge id="Flow_SolAta_AssinAta_di" bpmnElement="Flow_SolAta_AssinAta">
+        <di:waypoint x="580" y="108" />
+        <di:waypoint x="630" y="108" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_AssinAta_ProvFinan_di" bpmnElement="Flow_AssinAta_ProvFinan">
+        <di:waypoint x="730" y="108" />
+        <di:waypoint x="755" y="108" />
+        <di:waypoint x="755" y="770" />
+        <di:waypoint x="780" y="770" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_ProvFinan_IntRMReg_di" bpmnElement="Flow_ProvFinan_IntRMReg">
+        <di:waypoint x="880" y="770" />
+        <di:waypoint x="905" y="770" />
+        <di:waypoint x="905" y="910" />
+        <di:waypoint x="930" y="910" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_IntRMReg_ProgPagReg_di" bpmnElement="Flow_IntRMReg_ProgPagReg">
+        <di:waypoint x="1030" y="910" />
+        <di:waypoint x="1055" y="910" />
+        <di:waypoint x="1055" y="770" />
+        <di:waypoint x="1080" y="770" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_ProgPagReg_ConcFinReg_di" bpmnElement="Flow_ProgPagReg_ConcFinReg">
+        <di:waypoint x="1180" y="770" />
+        <di:waypoint x="1230" y="770" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_ConcFinReg_IntContReg_di" bpmnElement="Flow_ConcFinReg_IntContReg">
+        <di:waypoint x="1330" y="770" />
+        <di:waypoint x="1355" y="770" />
+        <di:waypoint x="1355" y="910" />
+        <di:waypoint x="1380" y="910" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_IntContReg_VerifSaldo_di" bpmnElement="Flow_IntContReg_VerifSaldo">
+        <di:waypoint x="1480" y="910" />
+        <di:waypoint x="1525" y="910" />
+        <di:waypoint x="1525" y="735" />
+      </bpmndi:BPMNEdge>
+
+      <bpmndi:BPMNEdge id="Flow_VerifSaldo_Fim_di" bpmnElement="Flow_VerifSaldo_Fim">
+        <di:waypoint x="1525" y="685" />
+        <di:waypoint x="1525" y="638" />
+        <di:waypoint x="1550" y="638" />
+      </bpmndi:BPMNEdge>
+
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>`;
+
+    // Inicializando o visualizador BPMN
+    const viewer = new BpmnJS({
+      container: '#canvas'
+    });
+
+    // Importando e renderizando
+    viewer.importXML(bpmnXML).then(function(result) {
+      const canvas = viewer.get('canvas');
+      
+      // Ajusta o zoom para encaixar o diagrama inteiro na tela inicial
+      canvas.zoom('fit-viewport');
+      
+    }).catch(function(err) {
+      console.error('Erro ao renderizar o diagrama', err);
+    });
+  </script>
+</body>
+</html>
