@@ -18,10 +18,17 @@
     <link rel="stylesheet" type="text/css" href="custom.css">
 </head>
 
-<body>
+<body class="content-form">
     <!-- Todo o formulário deve estar dentro desta div -->
     <div class="fluig-style-guide">
         <form name="form" role="form">
+
+            <!-- Campos Ocultos (Hidden) para Controle de Estado, Integrações e Workflow -->
+            <input type="hidden" id="atividadeAtual" name="atividadeAtual" value="">
+            <input type="hidden" id="modoFormulario" name="modoFormulario" value="">
+            <input type="hidden" id="statusIntegracaoRM" name="statusIntegracaoRM" value="">
+            <input type="hidden" id="statusDiretoria" name="statusDiretoria" value="">
+            <input type="hidden" id="statusControladoria" name="statusControladoria" value="">
 
 
 
@@ -68,423 +75,608 @@
                 </div>
                 <!-- Fim - Componente Timeline -->
 
-                <!-- ======================================================= -->
-                <!-- PAINEL 1: PLANEJAMENTO FINANCEIRO - DADOS TRIBUTÁRIOS   -->
-                <!-- ======================================================= -->
-                <div class="panel panel-primary" id="panelPlanejamento">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">
-                            <i class="flaticon flaticon-calculator icon-sm"></i>
-                            1. Planejamento Financeiro - Dados Tributários e Origem
-                        </h3>
-                    </div>
-                    <div class="panel-body">
+                <!-- Container Acordeão Principal -->
+                <div class="panel-group" id="accordion">
 
-                        <!-- Linha 1: Ano e Regime -->
-                        <div class="row">
-                            <div class="form-group col-md-3">
-                                <label for="anoReferencia">Ano de Referência</label>
-                                <input type="number" class="form-control" name="anoReferencia" id="anoReferencia"
-                                    placeholder="Ex: 2025">
-                            </div>
-                            <div class="form-group col-md-3">
-                                <label for="regimeTributario">Regime Tributário</label>
-                                <select class="form-control" name="regimeTributario" id="regimeTributario">
-                                    <option value="">Selecione...</option>
-                                    <option value="Lucro Presumido">Lucro Presumido</option>
-                                    <option value="Lucro Real">Lucro Real</option>
-                                    <option value="Simples Nacional">Simples Nacional</option>
-                                </select>
-                            </div>
+                    <!-- ======================================================= -->
+                    <!-- 1. PAINEL PRINCIPAL: ESTRUTURAÇÃO (COLAPSÁVEL E WARNING)-->
+                    <!-- ======================================================= -->
+                    <div class="panel panel-warning" id="panelEstruturacao">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <!-- 1. Comportamento Accordion/Sanfona aplicado -->
+                                <a class="collapse-icon up" data-toggle="collapse" data-parent="#accordion"
+                                    href="#collapseOne">
+                                    <span class="fluigicon fluigicon-money-circle fluigicon-md"></span> Estruturação dos
+                                    Dividendos
+                                </a>
+                            </h3>
                         </div>
 
-                        <!-- Linha 2: Receita e Base -->
-                        <div class="row">
-                            <div class="form-group col-md-4">
-                                <label for="receitaBruta">Receita Bruta do Período (R$)</label>
-                                <input type="text" class="form-control money" name="receitaBruta" id="receitaBruta"
-                                    placeholder="0,00">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="basePresumida">Base de Cálculo Presumida (%)</label>
-                                <input type="number" class="form-control" name="basePresumida" id="basePresumida"
-                                    placeholder="Ex: 32">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="limiteIsento">Limite Isento Lei 9.249/95 (R$)</label>
-                                <input type="text" class="form-control" name="limiteIsento" id="limiteIsento" readonly
-                                    placeholder="Cálculo Automático">
-                            </div>
-                        </div>
+                        <div id="collapseOne" class="panel-collapse collapse in">
+                            <div class="panel-body">
 
-                        <hr>
+                                <!-- 2. Navegação Interna por Abas (Tabs) -->
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="active"><a href="#tab_planejamento" role="tab"
+                                            data-toggle="tab">Planejamento Financeiro</a></li>
+                                    <li><a href="#tab_socios" role="tab" data-toggle="tab">Distribuição por Sócio</a>
+                                    </li>
+                                </ul>
 
-                        <!-- Linha 3: Origem do Lucro -->
-                        <div class="row">
-                            <div class="form-group col-md-6">
-                                <label>Origem do Lucro</label>
-                                <div class="radio">
-                                    <label>
-                                        <input type="radio" name="origemLucro" id="origemCorrente" value="corrente">
-                                        Lucro do Período Corrente (Antecipação)
-                                    </label>
-                                </div>
-                                <div class="radio">
-                                    <label>
-                                        <input type="radio" name="origemLucro" id="origemAnterior" value="anterior">
-                                        Lucro de Exercícios Anteriores (Distribuição Direta)
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
+                                <div class="tab-content">
 
-                        <!-- Linha 4: Valor Proposto e Centro de Custo -->
-                        <div class="row">
-                            <div class="form-group col-md-4">
-                                <label for="valorProposto">Valor Proposto para Distribuição (R$)</label>
-                                <input type="text" class="form-control money" name="valorProposto" id="valorProposto"
-                                    placeholder="0,00">
-                                <!-- Elemento oculto para a mensagem de alerta -->
-                                <span id="alertaLimite" class="text-danger" style="display:none;">
-                                    <strong>⚠ Excede Limite Isento - Necessária Escrituração Contábil</strong>
-                                </span>
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="centroCusto">Centro de Custos</label>
-                                <input type="text" class="form-control" name="centroCusto" id="centroCusto"
-                                    placeholder="Digite ou selecione...">
-                            </div>
-                        </div>
+                                    <!-- CONTEÚDO DA ABA 1: Planejamento Financeiro -->
+                                    <div class="tab-pane fade in active" id="tab_planejamento">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <div class="panel panel-warning" id="subPanelTributario">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubTributario"><span
+                                                            class="fluigicon fluigicon-file fluigicon-md"></span>
+                                                        Dados Tributários e Origem
+                                                    </a>
+                                                </h3>
+                                            </div>
 
-                    </div>
-                </div> <!-- Fim Painel 1 -->
-                <!-- ======================================================= -->
-                <!-- PAINEL 2: TABELA DE DISTRIBUIÇÃO POR SÓCIO (GRID)       -->
-                <!-- ======================================================= -->
-                <div class="panel panel-default" id="panelSocios">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">
-                            <i class="flaticon flaticon-users icon-sm"></i>
-                            2. Distribuição por Sócio
-                        </h3>
-                    </div>
-                    <div class="panel-body">
+                                            <div id="collapseSubTributario" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <!-- Linha 1: Ano e Regime -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-3">
+                                                            <label for="anoReferencia">Ano de Referência</label>
+                                                            <input type="number" class="form-control"
+                                                                name="anoReferencia" id="anoReferencia"
+                                                                placeholder="Ex: 2025">
+                                                        </div>
+                                                        <div class="form-group col-md-3">
+                                                            <label for="regimeTributario">Regime Tributário</label>
+                                                            <select class="form-control" name="regimeTributario"
+                                                                id="regimeTributario">
+                                                                <option value="">Selecione...</option>
+                                                                <option value="Lucro Presumido">Lucro Presumido</option>
+                                                                <option value="Lucro Real">Lucro Real</option>
+                                                                <option value="Simples Nacional">Simples Nacional
+                                                                </option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped" tablename="tabela_socios"
-                                id="tabela_socios" noaddbutton="true">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 25%">Nome / Razão Social do Sócio</th>
-                                        <th style="width: 15%">CPF / CNPJ</th>
-                                        <th style="width: 15%">Participação (%)</th>
-                                        <th style="width: 20%">Valor a Receber (R$)</th>
-                                        <th style="width: 25%">Dados Bancários</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <input type="text" class="form-control" name="nomeSocio" id="nomeSocio">
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control" name="cpfCnpjSocio"
-                                                id="cpfCnpjSocio">
-                                        </td>
-                                        <td>
-                                            <input type="number" class="form-control percent" name="percSocio"
-                                                id="percSocio">
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control money" name="valorSocio"
-                                                id="valorSocio">
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control" name="dadosBancariosSocio"
-                                                id="dadosBancariosSocio" placeholder="Banco, Agência, Conta">
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                                                    <!-- Linha 2: Receita e Base -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label for="receitaBruta">Receita Bruta do Período
+                                                                (R$)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="receitaBruta" id="receitaBruta"
+                                                                placeholder="0,00">
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="basePresumida">Base de Cálculo Presumida
+                                                                (%)</label>
+                                                            <input type="number" class="form-control"
+                                                                name="basePresumida" id="basePresumida"
+                                                                placeholder="Ex: 32">
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="limiteIsento">Limite Isento Lei 9.249/95
+                                                                (R$)</label>
+                                                            <input type="text" class="form-control" name="limiteIsento"
+                                                                id="limiteIsento" readonly
+                                                                placeholder="Cálculo Automático">
+                                                        </div>
+                                                    </div>
 
-                        <!-- Botão para adicionar nova linha nativo do Fluig Style Guide -->
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button type="button" class="btn btn-primary" onclick="wdkAddChild('tabela_socios')">
-                                    <i class="flaticon flaticon-add-plus icon-sm"></i> Adicionar Sócio
-                                </button>
-                            </div>
-                        </div>
+                                                    <hr>
 
-                    </div>
-                </div> <!-- Fim Painel 2 -->
+                                                    <!-- Linha 3: Origem do Lucro -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-6">
+                                                            <label>Origem do Lucro</label>
+                                                            <div class="radio">
+                                                                <label><input type="radio" name="origemLucro"
+                                                                        id="origemCorrente" value="corrente"> Lucro do
+                                                                    Período Corrente (Antecipação)</label>
+                                                            </div>
+                                                            <div class="radio">
+                                                                <label><input type="radio" name="origemLucro"
+                                                                        id="origemAnterior" value="anterior"> Lucro de
+                                                                    Exercícios Anteriores</label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-                <!-- ======================================================= -->
-                <!-- PAINEL 3: APROVAÇÃO DA DIRETORIA                        -->
-                <!-- ======================================================= -->
-                <div class="panel panel-default" id="panelDiretoria">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">
-                            <i class="flaticon flaticon-check-circle icon-sm"></i>
-                            3. Aprovação da Diretoria
-                        </h3>
-                    </div>
-                    <div class="panel-body">
+                                                    <!-- Linha 4: Valor Proposto -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label for="valorProposto">Valor Proposto para Distribuição
+                                                                (R$)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="valorProposto" id="valorProposto"
+                                                                placeholder="0,00">
+                                                            <span id="alertaLimite" class="text-danger"
+                                                                style>
+                                                                <strong>⚠ Excede Limite Isento</strong>
+                                                            </span>
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="centroCusto">Centro de Custos</label>
+                                                            <input type="text" class="form-control" name="centroCusto"
+                                                                id="centroCusto" placeholder="Digite ou selecione...">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> <!-- Fim Sub-painel -->
+                                    </div> <!-- Fim Aba Planejamento -->
 
-                        <!-- Linha 1: Decisão e Motivo de Rejeição -->
-                        <div class="row">
-                            <div class="form-group col-md-4">
-                                <label>Decisão da Diretoria</label>
-                                <div class="radio">
-                                    <label>
-                                        <input type="radio" name="decisaoDiretoria" id="dirAprovar" value="Aprovar">
-                                        Aprovar Proposta
-                                    </label>
-                                </div>
-                                <div class="radio">
-                                    <label>
-                                        <input type="radio" name="decisaoDiretoria" id="dirRejeitar" value="Rejeitar">
-                                        Rejeitar Proposta
-                                    </label>
-                                </div>
-                            </div>
+                                    <!-- CONTEÚDO DA ABA 2: Distribuição por Sócio -->
+                                    <div class="tab-pane fade" id="tab_socios">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <div class="panel panel-primary" id="subPanelSocios">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubSocios">
+                                                        <span class="fluigicon fluigicon-users fluigicon-md"></span>
+                                                        Tabela de Rateio
+                                                    </a>
+                                                </h3>
+                                            </div>
 
-                            <!-- Esta div será exibida via JavaScript apenas se a decisão for "Rejeitar" -->
-                            <div class="form-group col-md-8" id="divMotivoRejeicao" style="display: none;">
-                                <label for="motivoRejeicaoDir">Motivo da Rejeição (Obrigatório em caso de
-                                    recusa)</label>
-                                <select class="form-control" name="motivoRejeicaoDir" id="motivoRejeicaoDir">
-                                    <option value="">Selecione o motivo...</option>
-                                    <option value="Fluxo de caixa insuficiente">Fluxo de caixa insuficiente</option>
-                                    <option value="Resultado não confirmado">Resultado não confirmado</option>
-                                    <option value="Não alinhado com estratégia">Não alinhado com estratégia</option>
-                                    <option value="Outro">Outro (Especificar nas observações)</option>
-                                </select>
-                            </div>
-                        </div>
+                                            <div id="collapseSubSocios" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered table-striped"
+                                                            tablename="tabela_socios" id="tabela_socios"
+                                                            noaddbutton="true">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style="width: 25%">Nome / Razão Social do Sócio
+                                                                    </th>
+                                                                    <th style="width: 15%">CPF / CNPJ</th>
+                                                                    <th style="width: 15%">Participação (%)</th>
+                                                                    <th style="width: 20%">Valor a Receber (R$)</th>
+                                                                    <th style="width: 25%">Dados Bancários</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td><input type="text" class="form-control"
+                                                                            name="nomeSocio" id="nomeSocio"></td>
+                                                                    <td><input type="text" class="form-control"
+                                                                            name="cpfCnpjSocio" id="cpfCnpjSocio"></td>
+                                                                    <td><input type="number"
+                                                                            class="form-control percent"
+                                                                            name="percSocio" id="percSocio"></td>
+                                                                    <td><input type="text" class="form-control money"
+                                                                            name="valorSocio" id="valorSocio"></td>
+                                                                    <td><input type="text" class="form-control"
+                                                                            name="dadosBancariosSocio"
+                                                                            id="dadosBancariosSocio"
+                                                                            placeholder="Banco, Agência, Conta"></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div style="display: flex; align-items: center;">
+                                                            <button type="button" class="botaoAdicionar"
+                                                                onclick="wdkAddChild('tabela_socios')">
+                                                                <span class="simboloBotao">+</span>
+                                                            </button>
+                                                            <span
+                                                                style="margin-left: 10px; font-weight: bold; color: #004578;">Adicionar
+                                                                Sócio</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> <!-- Fim Sub-painel Sócios -->
+                                    </div> <!-- Fim Aba Sócios -->
 
-                        <!-- Linha 2: Observações -->
-                        <div class="row">
-                            <div class="form-group col-md-12">
-                                <label for="obsDiretoria">Observações da Diretoria</label>
-                                <textarea class="form-control" name="obsDiretoria" id="obsDiretoria" rows="3"
-                                    placeholder="Digite considerações adicionais..."></textarea>
-                            </div>
-                        </div>
-
-                    </div>
-                </div> <!-- Fim Painel 3 -->
-
-                <!-- ======================================================= -->
-                <!-- PAINEL 4: AVALIAÇÃO TÉCNICA - CONTROLADORIA             -->
-                <!-- ======================================================= -->
-                <div class="panel panel-default" id="panelControladoria">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">
-                            <i class="flaticon flaticon-list icon-sm"></i>
-                            4. Avaliação Técnica - Controladoria
-                        </h3>
-                    </div>
-                    <div class="panel-body">
-
-                        <!-- Linha 1: Checklist -->
-                        <div class="row">
-                            <div class="form-group col-md-12">
-                                <label>Checklist Fiscal e Conformidade (Obrigatórios para aprovação)</label>
-                                <div class="checkbox">
-                                    <label>
-                                        <input type="checkbox" name="checkRegime" id="checkRegime" value="sim">
-                                        Regime confirmado e período tributário encerrado
-                                    </label>
-                                </div>
-                                <div class="checkbox">
-                                    <label>
-                                        <input type="checkbox" name="checkDctf" id="checkDctf" value="sim">
-                                        DCTF transmitida e quitada
-                                    </label>
-                                </div>
-                                <div class="checkbox">
-                                    <label>
-                                        <input type="checkbox" name="checkLei9249" id="checkLei9249" value="sim">
-                                        Conformidade com Lei 9.249/95 (Isenção IRRF / Conformidade)
-                                    </label>
-                                </div>
+                                </div> <!-- Fim Tab-Content -->
                             </div>
                         </div>
+                    </div> <!-- Fim Painel Principal 1 -->
 
-                        <hr>
-
-                        <!-- Linha 2: Decisão e Parecer -->
-                        <div class="row">
-                            <div class="form-group col-md-4">
-                                <label for="decisaoControladoria">Decisão da Controladoria</label>
-                                <select class="form-control" name="decisaoControladoria" id="decisaoControladoria">
-                                    <option value="">Selecione...</option>
-                                    <option value="Aprovar">Aprovar (Cálculos corretos e conformes)</option>
-                                    <option value="Aprovar com Ressalvas">Aprovar com Ressalvas</option>
-                                    <option value="Rejeitar">Rejeitar (Retornar ou Cancelar)</option>
-                                </select>
-                            </div>
-                            <div class="form-group col-md-8">
-                                <label for="parecerControladoria">Parecer da Controladoria / Recomendações</label>
-                                <textarea class="form-control" name="parecerControladoria" id="parecerControladoria"
-                                    rows="3"
-                                    placeholder="Digite o parecer técnico, recomendações ou ressalvas..."></textarea>
-                            </div>
+                    <!-- ======================================================= -->
+                    <!-- 2. PAINEL PRINCIPAL: AVALIAÇÕES (COLAPSÁVEL E WARNING)  -->
+                    <!-- ======================================================= -->
+                    <div class="panel panel-warning" id="panelAvaliacoes">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <!-- 1. Comportamento Accordion/Sanfona aplicado -->
+                                <a class="collapse-icon up" data-toggle="collapse" data-parent="#accordion"
+                                    href="#collapseTwo">
+                                    <span class="fluigicon fluigicon-handshake fluigicon-md"></span> Avaliações e
+                                    Aprovações
+                                </a>
+                            </h3>
                         </div>
 
-                    </div>
-                </div> <!-- Fim Painel 4 -->
+                        <div id="collapseTwo" class="panel-collapse collapse in">
+                            <div class="panel-body">
 
-                <!-- ======================================================= -->
-                <!-- PAINEL 5: SOLICITAÇÃO DE ATA (DISTRIBUIÇÃO REGULAR)     -->
-                <!-- ======================================================= -->
-                <!-- Nota: Este painel inicia oculto e será exibido via JS se a origem for "Lucro de Exercícios Anteriores" -->
-                <div class="panel panel-default" id="panelAta" style="display: none;">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">
-                            <i class="flaticon flaticon-document icon-sm"></i>
-                            5. Solicitação e Geração de Ata
-                        </h3>
-                    </div>
-                    <div class="panel-body">
+                                <!-- 2. Navegação Interna por Abas (Tabs) -->
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="active"><a href="#tab_diretoria" role="tab" data-toggle="tab">Aprovação
+                                            da Diretoria</a></li>
+                                    <li><a href="#tab_controladoria" role="tab" data-toggle="tab">Avaliação Técnica -
+                                            Controladoria</a></li>
+                                </ul>
 
-                        <!-- Linha 1: Dados Gerais da Ata -->
-                        <div class="row">
-                            <div class="form-group col-md-4">
-                                <label for="dataAta">Data da Ata</label>
-                                <input type="date" class="form-control" name="dataAta" id="dataAta">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="localAta">Local</label>
-                                <input type="text" class="form-control" name="localAta" id="localAta"
-                                    placeholder="Ex: Sede da Empresa">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="horarioAta">Horário</label>
-                                <input type="time" class="form-control" name="horarioAta" id="horarioAta">
+                                <div class="tab-content">
+
+                                    <!-- CONTEÚDO DA ABA 1: Diretoria (Antigo Painel 3) -->
+                                    <div class="tab-pane fade in active" id="tab_diretoria">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <div class="panel panel-warning" id="subPanelDiretoria">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubDiretoria"><span
+                                                            class="fluigicon fluigicon-user-comment fluigicon-md"></span>
+                                                        Parecer e Decisão
+                                                    </a>
+                                                </h3>
+                                            </div>
+
+                                            <div id="collapseSubDiretoria" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <!-- Linha 1: Decisão e Motivo de Rejeição -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label>Decisão da Diretoria</label>
+                                                            <div class="radio">
+                                                                <label>
+                                                                    <input type="radio" name="decisaoDiretoria"
+                                                                        id="dirAprovar" value="Aprovar"> Aprovar
+                                                                    Proposta
+                                                                </label>
+                                                            </div>
+                                                            <div class="radio">
+                                                                <label>
+                                                                    <input type="radio" name="decisaoDiretoria"
+                                                                        id="dirRejeitar" value="Rejeitar"> Rejeitar
+                                                                    Proposta
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group col-md-8" id="divMotivoRejeicao"
+                                                            style>
+                                                            <label for="motivoRejeicaoDir">Motivo da Rejeição
+                                                                (Obrigatório em caso de recusa)</label>
+                                                            <select class="form-control" name="motivoRejeicaoDir"
+                                                                id="motivoRejeicaoDir">
+                                                                <option value="">Selecione o motivo...</option>
+                                                                <option value="Fluxo de caixa insuficiente">Fluxo de
+                                                                    caixa insuficiente</option>
+                                                                <option value="Resultado não confirmado">Resultado não
+                                                                    confirmado</option>
+                                                                <option value="Não alinhado com estratégia">Não alinhado
+                                                                    com estratégia</option>
+                                                                <option value="Outro">Outro (Especificar nas
+                                                                    observações)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Linha 2: Observações -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-12">
+                                                            <label for="obsDiretoria">Observações da Diretoria</label>
+                                                            <textarea class="form-control" name="obsDiretoria"
+                                                                id="obsDiretoria" rows="3"
+                                                                placeholder="Digite considerações adicionais..."></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> <!-- Fim Sub-painel Diretoria -->
+                                    </div> <!-- Fim Aba Diretoria -->
+
+                                    <!-- CONTEÚDO DA ABA 2: Controladoria (Antigo Painel 4) -->
+                                    <div class="tab-pane fade" id="tab_controladoria">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <div class="panel panel-success" id="subPanelControladoria">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubControladoria"><i
+                                                            class="glyphicon glyphicon-check"></i>
+                                                        Checklist e Conformidade Fiscal
+                                                    </a>
+                                                </h3>
+                                            </div>
+
+                                            <div id="collapseSubControladoria" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <!-- Linha 1: Checklist -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-12">
+                                                            <label>Checklist Fiscal e Conformidade (Obrigatórios para
+                                                                aprovação)</label>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox" name="checkRegime"
+                                                                        id="checkRegime" value="sim"> Regime confirmado
+                                                                    e período tributário encerrado
+                                                                </label>
+                                                            </div>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox" name="checkDctf"
+                                                                        id="checkDctf" value="sim"> DCTF transmitida e
+                                                                    quitada
+                                                                </label>
+                                                            </div>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox" name="checkLei9249"
+                                                                        id="checkLei9249" value="sim"> Conformidade com
+                                                                    Lei 9.249/95 (Isenção IRRF / Conformidade)
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+
+                                                    <!-- Linha 2: Decisão e Parecer -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label for="decisaoControladoria">Decisão da
+                                                                Controladoria</label>
+                                                            <select class="form-control" name="decisaoControladoria"
+                                                                id="decisaoControladoria">
+                                                                <option value="">Selecione...</option>
+                                                                <option value="Aprovar">Aprovar (Cálculos corretos e
+                                                                    conformes)</option>
+                                                                <option value="Aprovar com Ressalvas">Aprovar com
+                                                                    Ressalvas</option>
+                                                                <option value="Rejeitar">Rejeitar (Retornar ou Cancelar)
+                                                                </option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-group col-md-8">
+                                                            <label for="parecerControladoria">Parecer da Controladoria /
+                                                                Recomendações</label>
+                                                            <textarea class="form-control" name="parecerControladoria"
+                                                                id="parecerControladoria" rows="3"
+                                                                placeholder="Digite o parecer técnico, recomendações ou ressalvas..."></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> <!-- Fim Sub-painel Controladoria -->
+                                    </div> <!-- Fim Aba Controladoria -->
+
+                                </div> <!-- Fim Tab-Content -->
                             </div>
                         </div>
+                    </div> <!-- Fim Painel Principal 2 -->
 
-                        <!-- Linha 2: Dados do Exercício -->
-                        <div class="row">
-                            <div class="form-group col-md-4">
-                                <label for="periodoReferenciaAta">Período de Referência (De/Até)</label>
-                                <input type="text" class="form-control" name="periodoReferenciaAta"
-                                    id="periodoReferenciaAta" placeholder="Ex: 01/01/2024 a 31/12/2024">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="resultadoLiquido">Resultado Líquido do Exercício (R$)</label>
-                                <input type="text" class="form-control money" name="resultadoLiquido"
-                                    id="resultadoLiquido" placeholder="0,00">
-                            </div>
-                            <div class="form-group col-md-4">
-                                <label for="totalDisponivel">Total Disponível para Distribuição (R$)</label>
-                                <input type="text" class="form-control money" name="totalDisponivel"
-                                    id="totalDisponivel" placeholder="0,00">
-                            </div>
+                    <!-- ======================================================= -->
+                    <!-- 3. PAINEL PRINCIPAL: ATA E EXECUÇÃO (COLAPSÁVEL E WARNING) -->
+                    <!-- ======================================================= -->
+                    <div class="panel panel-warning" id="panelConclusao">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <!-- 1. Comportamento Accordion/Sanfona aplicado -->
+                                <a class="collapse-icon up" data-toggle="collapse" data-parent="#accordion"
+                                    href="#collapseThree">
+                                    <span class="fluigicon fluigicon-file fluigicon-md"></span> Ata e Execução
+                                    Financeira
+                                </a>
+                            </h3>
                         </div>
 
-                        <hr>
+                        <div id="collapseThree" class="panel-collapse collapse in">
+                            <div class="panel-body">
 
-                        <!-- Linha 3: Assinantes e Justificativa -->
-                        <div class="row">
-                            <div class="form-group col-md-4">
-                                <label>Assinantes (Integração Qualysign)</label>
-                                <div class="checkbox">
-                                    <label>
-                                        <input type="checkbox" name="assinaturaRepresentante"
-                                            id="assinaturaRepresentante" value="sim">
-                                        Representante Legal (Obrigatório)
-                                    </label>
-                                </div>
-                                <div class="checkbox">
-                                    <label>
-                                        <input type="checkbox" name="assinaturaFinanceiro" id="assinaturaFinanceiro"
-                                            value="sim">
-                                        Gerente Financeiro (Opcional)
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="form-group col-md-8">
-                                <label for="justificativaAta">Justificativa da Distribuição e Impacto Financeiro</label>
-                                <textarea class="form-control" name="justificativaAta" id="justificativaAta" rows="3"
-                                    placeholder="Detalhes para constar no documento legal..."></textarea>
+                                <!-- 2. Navegação Interna por Abas (Tabs) -->
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="active"><a href="#tab_ata" role="tab" data-toggle="tab">Solicitação e
+                                            Geração de Ata</a></li>
+                                    <li><a href="#tab_financeiro" role="tab" data-toggle="tab">Execução Financeira e
+                                            Pagamento</a></li>
+                                </ul>
+
+                                <div class="tab-content">
+
+                                    <!-- CONTEÚDO DA ABA 1: Ata (Antigo Painel 5) -->
+                                    <div class="tab-pane fade in active" id="tab_ata">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <!-- Mantido o ID original 'panelAta' e o style='display:none' para não quebrar regras de negócio do seu JS -->
+                                        <div class="panel panel-primary" id="panelAta" style>
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubAta"><span
+                                                            class="fluigicon fluigicon-calendar fluigicon-md"></span>
+                                                        Dados da Ata e Justificativa
+                                                    </a>
+                                                </h3>
+                                            </div>
+
+                                            <div id="collapseSubAta" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <!-- Linha 1: Dados Gerais da Ata -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label for="dataAta">Data da Ata</label>
+                                                            <input type="date" class="form-control" name="dataAta"
+                                                                id="dataAta">
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="localAta">Local</label>
+                                                            <input type="text" class="form-control" name="localAta"
+                                                                id="localAta" placeholder="Ex: Sede da Empresa">
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="horarioAta">Horário</label>
+                                                            <input type="time" class="form-control" name="horarioAta"
+                                                                id="horarioAta">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Linha 2: Dados do Exercício -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label for="periodoReferenciaAta">Período de Referência
+                                                                (De/Até)</label>
+                                                            <input type="text" class="form-control"
+                                                                name="periodoReferenciaAta" id="periodoReferenciaAta"
+                                                                placeholder="Ex: 01/01/2024 a 31/12/2024">
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="resultadoLiquido">Resultado Líquido do Exercício
+                                                                (R$)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="resultadoLiquido" id="resultadoLiquido"
+                                                                placeholder="0,00">
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="totalDisponivel">Total Disponível para
+                                                                Distribuição (R$)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="totalDisponivel" id="totalDisponivel"
+                                                                placeholder="0,00">
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+
+                                                    <!-- Linha 3: Assinantes e Justificativa -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label>Assinantes (Integração Qualysign)</label>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox"
+                                                                        name="assinaturaRepresentante"
+                                                                        id="assinaturaRepresentante" value="sim">
+                                                                    Representante Legal (Obrigatório)
+                                                                </label>
+                                                            </div>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox" name="assinaturaFinanceiro"
+                                                                        id="assinaturaFinanceiro" value="sim"> Gerente
+                                                                    Financeiro (Opcional)
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group col-md-8">
+                                                            <label for="justificativaAta">Justificativa da Distribuição
+                                                                e Impacto Financeiro</label>
+                                                            <textarea class="form-control" name="justificativaAta"
+                                                                id="justificativaAta" rows="3"
+                                                                placeholder="Detalhes para constar no documento legal..."></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> <!-- Fim Sub-painel Ata -->
+                                    </div> <!-- Fim Aba Ata -->
+
+                                    <!-- CONTEÚDO DA ABA 2: Execução Financeira (Antigo Painel 6) -->
+                                    <div class="tab-pane fade" id="tab_financeiro">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <!-- Mantido o ID original 'panelFinanceiro' e o style='display:none' -->
+                                        <div class="panel panel-success" id="panelFinanceiro" style>
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubFinanceiro">
+                                                        <span class="fluigicon fluigicon-money fluigicon-md"></span>
+                                                        Programação de
+                                                        Pagamentos
+                                                    </a>
+                                                </h3>
+                                            </div>
+
+                                            <div id="collapseSubFinanceiro" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered table-striped"
+                                                            tablename="tabela_pagamentos" id="tabela_pagamentos"
+                                                            noaddbutton="true">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style="width: 25%">Sócio Favorecido</th>
+                                                                    <th style="width: 20%">Data Programada</th>
+                                                                    <th style="width: 20%">Status do Pagamento</th>
+                                                                    <th style="width: 20%">Data Efetiva (Qive)</th>
+                                                                    <th style="width: 15%">Protocolo Bancário</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td>
+                                                                        <!-- Campo preenchido via JS espelhando o Painel 2 -->
+                                                                        <input type="text" class="form-control"
+                                                                            name="pagFavorecido" id="pagFavorecido"
+                                                                            readonly>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="date" class="form-control"
+                                                                            name="pagDataProgramada"
+                                                                            id="pagDataProgramada">
+                                                                    </td>
+                                                                    <td>
+                                                                        <select class="form-control" name="pagStatus"
+                                                                            id="pagStatus">
+                                                                            <option value="Pendente">Pendente</option>
+                                                                            <option value="Autorizado">Autorizado
+                                                                            </option>
+                                                                            <option value="Liquidado">Liquidado</option>
+                                                                        </select>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="date" class="form-control"
+                                                                            name="pagDataEfetiva" id="pagDataEfetiva">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="text" class="form-control"
+                                                                            name="pagProtocolo" id="pagProtocolo"
+                                                                            placeholder="Automático ou Manual">
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div style="display: flex; align-items: center;">
+                                                            <button type="button" class="botaoAdicionar"
+                                                                onclick="wdkAddChild('tabela_pagamentos')">
+                                                                <span class="simboloBotao">+</span>
+                                                            </button>
+                                                            <span
+                                                                style="margin-left: 10px; font-weight: bold; color: #004578;">Adicionar
+                                                                Programação</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> <!-- Fim Sub-painel Financeiro -->
+                                    </div> <!-- Fim Aba Financeiro -->
+
+                                </div> <!-- Fim Tab-Content -->
                             </div>
                         </div>
+                    </div> <!-- Fim Painel Principal 3 -->
 
-                    </div>
-                </div> <!-- Fim Painel 5 -->
-
-
-                <!-- ======================================================= -->
-                <!-- PAINEL 6: EXECUÇÃO FINANCEIRA E PAGAMENTO (GRID)        -->
-                <!-- ======================================================= -->
-                <div class="panel panel-default" id="panelFinanceiro" style="display: none;">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">
-                            <i class="flaticon flaticon-card icon-sm"></i>
-                            6. Execução Financeira e Pagamento
-                        </h3>
-                    </div>
-                    <div class="panel-body">
-
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped" tablename="tabela_pagamentos"
-                                id="tabela_pagamentos" noaddbutton="true">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 25%">Sócio Favorecido</th>
-                                        <th style="width: 20%">Data Programada</th>
-                                        <th style="width: 20%">Status do Pagamento</th>
-                                        <th style="width: 20%">Data Efetiva (Qive)</th>
-                                        <th style="width: 15%">Protocolo Bancário</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>
-                                            <!-- Campo preenchido via JS espelhando o Painel 2 -->
-                                            <input type="text" class="form-control" name="pagFavorecido"
-                                                id="pagFavorecido" readonly>
-                                        </td>
-                                        <td>
-                                            <input type="date" class="form-control" name="pagDataProgramada"
-                                                id="pagDataProgramada">
-                                        </td>
-                                        <td>
-                                            <select class="form-control" name="pagStatus" id="pagStatus">
-                                                <option value="Pendente">Pendente</option>
-                                                <option value="Autorizado">Autorizado</option>
-                                                <option value="Liquidado">Liquidado</option>
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input type="date" class="form-control" name="pagDataEfetiva"
-                                                id="pagDataEfetiva">
-                                        </td>
-                                        <td>
-                                            <input type="text" class="form-control" name="pagProtocolo"
-                                                id="pagProtocolo" placeholder="Automático ou Manual">
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- Botão de adicionar linha no Grid de Pagamentos -->
-                        <div class="row">
-                            <div class="col-md-12">
-                                <button type="button" class="btn btn-primary"
-                                    onclick="wdkAddChild('tabela_pagamentos')">
-                                    <i class="flaticon flaticon-add-plus icon-sm"></i> Adicionar Programação
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-                </div> <!-- Fim Painel 6 -->
+                </div> <!-- Fim do Accordion Group -->
             </div> <!-- Fim container-fluid -->
         </form>
     </div> <!-- Fim fluig-style-guide -->
