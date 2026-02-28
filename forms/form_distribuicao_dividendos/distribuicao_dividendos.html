@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <title>Distribuição de Dividendos</title>
-    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Imports Obrigatórios Fluig Style Guide -->
@@ -197,7 +196,7 @@
                                                                 name="valorProposto" id="valorProposto"
                                                                 placeholder="0,00">
                                                             <span id="alertaLimite" class="text-danger"
-                                                                style>
+                                                                style="display:none;">
                                                                 <strong>⚠ Excede Limite Isento</strong>
                                                             </span>
                                                         </div>
@@ -349,7 +348,7 @@
                                                         </div>
 
                                                         <div class="form-group col-md-8" id="divMotivoRejeicao"
-                                                            style>
+                                                            style="display: none;">
                                                             <label for="motivoRejeicaoDir">Motivo da Rejeição
                                                                 (Obrigatório em caso de recusa)</label>
                                                             <select class="form-control" name="motivoRejeicaoDir"
@@ -496,7 +495,7 @@
                                         <br>
                                         <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
                                         <!-- Mantido o ID original 'panelAta' e o style='display:none' para não quebrar regras de negócio do seu JS -->
-                                        <div class="panel panel-primary" id="panelAta" style>
+                                        <div class="panel panel-primary" id="panelAta" style="display: none;">
                                             <div class="panel-heading">
                                                 <h3 class="panel-title">
                                                     <a class="collapse-icon up" data-toggle="collapse"
