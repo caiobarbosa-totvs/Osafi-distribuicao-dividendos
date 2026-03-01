@@ -202,8 +202,17 @@
                                                         </div>
                                                         <div class="form-group col-md-4">
                                                             <label for="centroCusto">Centro de Custos</label>
-                                                            <input type="text" class="form-control" name="centroCusto"
-                                                                id="centroCusto" placeholder="Digite ou selecione...">
+                                                            <input type="zoom" class="form-control" name="centroCusto"
+                                                                id="centroCusto" data-zoom="{
+                                                                    'displayKey': 'NOME_CENTRO_CUSTO',
+                                                                    'datasetId': 'ds_rm_centro_custo',
+                                                                    'maximumSelectionLength': '1',
+                                                                    'placeholder': 'Selecione o Centro de Custo...',
+                                                                    'fields': [
+                                                                        { 'field': 'CODIGO', 'label': 'Código' },
+                                                                        { 'field': 'NOME_CENTRO_CUSTO', 'label': 'Nome', 'standard': 'true' }
+                                                                    ]
+                                                                }">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -244,8 +253,17 @@
                                                             </thead>
                                                             <tbody>
                                                                 <tr>
-                                                                    <td><input type="text" class="form-control"
-                                                                            name="nomeSocio" id="nomeSocio"></td>
+                                                                    <td><input type="zoom" class="form-control"
+                                                                            name="nomeSocio" id="nomeSocio" data-zoom="{
+                                                                                'displayKey': 'NOME_SOCIO',
+                                                                                'datasetId': 'ds_rm_socios',
+                                                                                'maximumSelectionLength': '1',
+                                                                                'placeholder': 'Buscar Sócio...',
+                                                                                'fields': [
+                                                                                    { 'field': 'CPF_CNPJ', 'label': 'CPF/CNPJ' },
+                                                                                    { 'field': 'NOME_SOCIO', 'label': 'Sócio', 'standard': 'true' }
+                                                                                ]
+                                                                            }"></td>
                                                                     <td><input type="text" class="form-control"
                                                                             name="cpfCnpjSocio" id="cpfCnpjSocio"></td>
                                                                     <td><input type="number"
@@ -681,7 +699,9 @@
     </div> <!-- Fim fluig-style-guide -->
 
     <!-- Import do JS Customizado (Criaremos na etapa de validações) -->
-    <!-- <script type="text/javascript" src="distribuicao_dividendos.js"></script> -->
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script type="text/javascript" src="distribuicao_dividendos.js"></script>
 </body>
 
 </html>
