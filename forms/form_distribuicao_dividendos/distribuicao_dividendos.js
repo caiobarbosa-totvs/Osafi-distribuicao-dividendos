@@ -1,3 +1,31 @@
+var ATIVIDADES = {
+    INICIO: 0,
+    INICIALIZACAO: 1,
+    PLANEJAMENTO_FINANCEIRO: 2,
+    APROVACAO_CONSELHO: 4,
+    AVALIACAO_TECNICA: 6,
+    SOLICITACAO_ATA: 12,
+    ASSINATURA_ATA: 14,
+    REJEICAO_FIM: 19,
+    INTEGRACAO_RM_TOTVS: 23,
+    PROGRAMACAO_PAGAMENTOS: 25,
+    VALIDACAO_PAGAMENTO: 27,
+    CONCILIACAO_FINANCEIRA: 32,
+    ANEXACAO_COMPROVANTE: 33,
+    PROVISOES_FINANCEIRAS: 34,
+    INTEGRACAO_RM_TOTVS_REGULAR: 35,
+    PROGRAMACAO_PAGAMENTO_REGULAR: 36,
+    CONCILIACAO_FINANCEIRA_REGULAR: 37,
+    INTEGRACAO_CONTABIL_REGULAR: 38,
+    FIM: 40,
+    INTEGRACAO_CONTABIL: 43,
+    CONCILIACAO_CONTABIL: 44,
+    GATEWAY_APROVACAO_1: 65,
+    GATEWAY_DECISAO_2: 68,
+    GATEWAY_ASSINATURA_ATA_3: 72,
+    GATEWAY_SALDO_EXISTENTE_4: 76
+};
+
 var DistDividendos = {
 
     // 1. Inicialização (Roda assim que o formulário carrega)
@@ -81,29 +109,34 @@ var DistDividendos = {
 
     // 4. Lógica da Timeline e Exibição de Painéis
     controlarPaineis: function () {
-        // Pega o valor da atividade atual do campo hidden que o Fluig vai preencher
-        var atividade = $("#atividadeAtual").val();
+        // Pega o valor da atividade atual do campo hidden e converte para número
+        var atividadeStr = $("#atividadeAtual").val();
+        var atividade = atividadeStr ? parseInt(atividadeStr) : 0;
+
         var stepAtual = 0; // Começa no Início (0)
 
         // Mapeamento das atividades do Workflow (BPMN) para os steps do HTML
-        if (atividade == "0" || atividade == "4" || atividade == "StartEvent_1" || atividade == "Task_PlanFin") {
+        if (atividade == ATIVIDADES.INICIO || atividade == ATIVIDADES.INICIALIZACAO || atividade == ATIVIDADES.PLANEJAMENTO_FINANCEIRO) {
             stepAtual = 1; // Step 1: Planejamento Financeiro / Step 2: Sócios
-
-        } else if (atividade == "Task_AprovConselho") {
+        } else if (atividade == ATIVIDADES.APROVACAO_CONSELHO) {
             stepAtual = 3; // Step 3: Aprovação da Diretoria
-
-        } else if (atividade == "Task_AvalTecnica") {
+        } else if (atividade == ATIVIDADES.AVALIACAO_TECNICA) {
             stepAtual = 4; // Step 4: Avaliação Técnica - Controladoria
-
-        } else if (atividade == "Task_SolAta" || atividade == "Task_AssinAta") {
+        } else if (atividade == ATIVIDADES.SOLICITACAO_ATA || atividade == ATIVIDADES.ASSINATURA_ATA) {
             stepAtual = 5; // Step 5: Solicitação e Geração de Ata
-
-        } else if (atividade == "Task_ProgPagamento" || atividade == "Task_ValPagamento" ||
-            atividade == "Task_ConcFinan" || atividade == "Task_AnexaComp" ||
-            atividade == "Task_ProvFinan" || atividade == "Task_ProgPagRegular") {
+        } else if (
+            // Todas as atividades pertinentes à Execução Financeira (Adicionadas as conciliações faltantes)
+            atividade == ATIVIDADES.PROGRAMACAO_PAGAMENTOS ||
+            atividade == ATIVIDADES.VALIDACAO_PAGAMENTO ||
+            atividade == ATIVIDADES.CONCILIACAO_FINANCEIRA ||
+            atividade == ATIVIDADES.ANEXACAO_COMPROVANTE ||
+            atividade == ATIVIDADES.PROVISOES_FINANCEIRAS ||
+            atividade == ATIVIDADES.PROGRAMACAO_PAGAMENTO_REGULAR ||
+            atividade == ATIVIDADES.CONCILIACAO_FINANCEIRA_REGULAR ||
+            atividade == ATIVIDADES.CONCILIACAO_CONTABIL
+        ) {
             stepAtual = 6; // Step 6: Execução Financeira e Pagamento
-
-        } else if (atividade == "EndEvent_1" || atividade == "EndEvent_Error") {
+        } else if (atividade == ATIVIDADES.FIM || atividade == ATIVIDADES.REJEICAO_FIM) {
             stepAtual = 7; // Step 7: Fim
         }
 
@@ -249,4 +282,5 @@ function removedZoomItem(removedItem) {
         $("#percSocio___" + linha).val('');
         $("#valorSocio___" + linha).val('');
     }
+
 }
