@@ -60,20 +60,32 @@ var DistDividendos = {
 
     // 3. Monitoramento de Eventos (Cliques, Mudanças de Valor)
     bindEventos: function () {
-        // --- EVENTO 1: Lógica de Exibição do Painel de Ata ---
+        // --- EVENTO 1: Lógica de Exibição do Painel de Ata e Limpeza de Zoom ---
         // Escuta as mudanças no radio button de "Origem do Lucro"
         $('input[name="origemLucro"]').on('change', function () {
             var origemSelecionada = $(this).val();
 
             if (origemSelecionada === 'anterior') {
-                // Lucro de Exercícios Anteriores: Tratamento de Distribuição Direta (Exige Ata)
-                // Revela o Painel de Ata com uma animação suave
+                // Lucro de Exercícios Anteriores: Exige Ata
                 $('#panelAta').slideDown();
             } else if (origemSelecionada === 'corrente') {
-                // Lucro Corrente: Tratamento de Antecipação (Ata gerada apenas no fechamento do balanço)
-                // Oculta o Painel de Ata
+                // Lucro Corrente: Oculta o Painel de Ata
                 $('#panelAta').slideUp();
             }
+
+            // Limpa o campo Zoom de Centro de Custos automaticamente
+            if (window["centroCusto"]) {
+                // Comando nativo do Fluig que "esvazia" o campo Zoom
+                window["centroCusto"].clear(); 
+            }
+
+            // Emite um pequeno aviso na tela informando que o campo foi limpo
+            FLUIGC.toast({
+                title: 'Aviso: ',
+                message: 'O Centro de Custos foi limpo devido à mudança na Origem do Lucro. Por favor, selecione-o novamente.',
+                type: 'warning',
+                timeout: 'fast'
+            });
         });
 
         // --- EVENTO 2: Lógica de Exibição do Motivo de Rejeição ---
@@ -254,18 +266,55 @@ function fnWdkAddChild(tableName) {
 function setSelectedZoomItem(selectedItem) {
     var inputId = selectedItem.inputId;
 
-    // Se o zoom disparado for o da tabela de Sócios (Pai x Filho)s
+    // 1. NOVA FUNÇÃO: Filtro em Cascata (Empresa/Filial -> Centro de Custos)
+    if (inputId == "empresaFilial") {
+        // Ao selecionar a Empresa/Filial, recarrega o zoom de Centro de Custos.
+        // ATENÇÃO: Substitua "CODCOLIGADA" pela coluna real que faz o filtro no seu dataset 'ds_rm_centro_custo'
+        reloadZoomFilterValues("centroCusto", "CODCOLIGADA," + selectedItem["CODIGO_FILIAL"]);
+    }
+
+    // 2. LÓGICA ORIGINAL MANTIDA (Tabela de Rateio Pai x Filho)
     if (inputId.match(/^nomeSocio___/)) {
+        // Extrai o número da linha mantendo o seu padrão exato
+        var linha = inputId.split("___")[5];
 
-        // Extrai o número da linha atual (ex: pega o "1" de "nomeSocio___1")
-        var linha = inputId.split("___")[4];
+        // 2.1 - CRIAÇÃO DO FILTRO PARA CONSULTA
+        // Monta um filtro (Constraint) usando o CPF_CNPJ do sócio que acabou de ser selecionado
+        var c1 = DatasetFactory.createConstraint("CPF_CNPJ", selectedItem.CPF_CNPJ, selectedItem.CPF_CNPJ, ConstraintType.MUST);
 
-        // Preenche automaticamente os outros campos da MESMA linha
-        $("#cpfCnpjSocio___" + linha).val(selectedItem.CPF_CNPJ);
-        $("#dadosBancariosSocio___" + linha).val("Banco: " + selectedItem.BANCO + " / Ag: " + selectedItem.AGENCIA + " / CC: " + selectedItem.CONTA);
+        // 2.2 - CONSULTA AO BANCO DE DADOS (Dataset)
+        var dsBloqueios = DatasetFactory.getDataset("ds_rm_bloqueios_socio", null, [c1], null);
 
-        // Dispara a máscara para formatar o CPF/CNPJ recém-injetado
-        DistDividendos.aplicarMascaras();
+        // 2.3 - VALIDAÇÃO E AÇÃO
+        // Verifica se o dataset retornou algo e se a coluna 'STATUS_BLOQUEIO' indica que ele está bloqueado
+        if (dsBloqueios != null && dsBloqueios.values != null && dsBloqueios.values.length > 0 && dsBloqueios.values.STATUS_BLOQUEIO == "SIM") {
+
+            // Exibe um alerta nativo e elegante do Fluig na tela
+            FLUIGC.toast({
+                title: 'Atenção: ',
+                message: 'O Sócio selecionado possui pendências ou bloqueios judiciais/fiscais e não pode ser incluído no rateio.',
+                type: 'danger',
+                timeout: 'slow'
+            });
+
+            // Limpa automaticamente o campo Zoom e os dados para impedir a inclusão
+            window[inputId].clear();
+            $("#cpfCnpjSocio___" + linha).val('');
+            $("#dadosBancariosSocio___" + linha).val('');
+
+        } else {
+            // Se NÃO houver bloqueio, a lógica original segue preenchendo os campos
+            $("#cpfCnpjSocio___" + linha).val(selectedItem.CPF_CNPJ);
+
+            // No seu HTML anterior usava BANCO, AGENCIA e CONTA. Ajuste os nomes caso seu dataset venha diferente.
+            var dadosBancarios = "Banco: " + (selectedItem.BANCO || '') + " / Ag: " + (selectedItem.AGENCIA || '') + " / CC: " + (selectedItem.CONTA || '');
+            $("#dadosBancariosSocio___" + linha).val(dadosBancarios);
+
+            // Dispara a máscara para formatar os campos
+            if (typeof DistDividendos !== "undefined" && typeof DistDividendos.aplicarMascaras === "function") {
+                DistDividendos.aplicarMascaras();
+            }
+        }
     }
 }
 
@@ -273,6 +322,15 @@ function setSelectedZoomItem(selectedItem) {
 function removedZoomItem(removedItem) {
     var inputId = removedItem.inputId;
 
+    // 1. Limpeza em Cascata
+    if (inputId == "empresaFilial") {
+        // Se a Empresa/Filial for apagada, limpa o filtro do Centro de Custos
+        reloadZoomFilterValues("centroCusto", "");
+        // Esvazia visualmente qualquer Centro de Custo que já estivesse preenchido
+        setZoomData("centroCusto", "");
+    }
+
+    // 2. LÓGICA ORIGINAL MANTIDA
     if (inputId.match(/^nomeSocio___/)) {
         var linha = inputId.split("___")[4];
 
@@ -282,5 +340,30 @@ function removedZoomItem(removedItem) {
         $("#percSocio___" + linha).val('');
         $("#valorSocio___" + linha).val('');
     }
-
 }
+
+// Função auxiliar importada do script modelo para limpar ou setar valor em zooms via código
+function setZoomData(instance, value) {
+    if (window[instance]) {
+        window[instance].setValue(value);
+    }
+}
+
+/* function limparLinhaSocio(elementoClicado) {
+    // Descobre o número da linha a partir do botão clicado
+    var linha = $(elementoClicado).closest('tr').find('input[id^="nomeSocio___"]').attr('id').split('___')[3];
+    
+    // 1. Limpa o campo ZOOM do sócio programaticamente
+    if (window["nomeSocio___" + linha]) {
+        window["nomeSocio___" + linha].clear(); 
+    }
+    
+    // 2. Limpa os campos de texto convencionais atrelados a ele
+    $("#cpfCnpjSocio___" + linha).val('');
+    $("#dadosBancariosSocio___" + linha).val('');
+    $("#percSocio___" + linha).val('');
+    $("#valorSocio___" + linha).val('');
+    
+    // 3. Dispara o recálculo financeiro (já que a porcentagem foi apagada)
+    DistDividendos.calcularValores();
+} */
