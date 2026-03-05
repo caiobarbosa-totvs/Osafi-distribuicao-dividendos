@@ -76,7 +76,7 @@ var DistDividendos = {
             // Limpa o campo Zoom de Centro de Custos automaticamente
             if (window["centroCusto"]) {
                 // Comando nativo do Fluig que "esvazia" o campo Zoom
-                window["centroCusto"].clear(); 
+                window["centroCusto"].clear();
             }
 
             // Emite um pequeno aviso na tela informando que o campo foi limpo
@@ -276,41 +276,34 @@ function setSelectedZoomItem(selectedItem) {
     // 2. LÓGICA ORIGINAL MANTIDA (Tabela de Rateio Pai x Filho)
     if (inputId.match(/^nomeSocio___/)) {
         // Extrai o número da linha mantendo o seu padrão exato
-        var linha = inputId.split("___")[5];
-
-        // 2.1 - CRIAÇÃO DO FILTRO PARA CONSULTA
+        var linha = inputId.split("___")[6];
         // Monta um filtro (Constraint) usando o CPF_CNPJ do sócio que acabou de ser selecionado
         var c1 = DatasetFactory.createConstraint("CPF_CNPJ", selectedItem.CPF_CNPJ, selectedItem.CPF_CNPJ, ConstraintType.MUST);
 
-        // 2.2 - CONSULTA AO BANCO DE DADOS (Dataset)
-        var dsBloqueios = DatasetFactory.getDataset("ds_rm_bloqueios_socio", null, [c1], null);
 
-        // 2.3 - VALIDAÇÃO E AÇÃO
-        // Verifica se o dataset retornou algo e se a coluna 'STATUS_BLOQUEIO' indica que ele está bloqueado
-        if (dsBloqueios != null && dsBloqueios.values != null && dsBloqueios.values.length > 0 && dsBloqueios.values.STATUS_BLOQUEIO == "SIM") {
+        // 1. VALIDAÇÃO DIRETA (Sincrona e muito mais rápida!)
+        // Lê a coluna que o próprio Zoom do Sócio acabou de trazer
+        if (selectedItem.STATUS_BLOQUEIO == "SIM") {
 
-            // Exibe um alerta nativo e elegante do Fluig na tela
             FLUIGC.toast({
                 title: 'Atenção: ',
-                message: 'O Sócio selecionado possui pendências ou bloqueios judiciais/fiscais e não pode ser incluído no rateio.',
+                message: 'O Sócio selecionado possui pendências judiciais/fiscais e não pode ser incluído.',
                 type: 'danger',
                 timeout: 'slow'
             });
 
-            // Limpa automaticamente o campo Zoom e os dados para impedir a inclusão
             window[inputId].clear();
             $("#cpfCnpjSocio___" + linha).val('');
             $("#dadosBancariosSocio___" + linha).val('');
 
         } else {
-            // Se NÃO houver bloqueio, a lógica original segue preenchendo os campos
+
+            // Se NÃO houver bloqueio, preenche normalmente
             $("#cpfCnpjSocio___" + linha).val(selectedItem.CPF_CNPJ);
 
-            // No seu HTML anterior usava BANCO, AGENCIA e CONTA. Ajuste os nomes caso seu dataset venha diferente.
             var dadosBancarios = "Banco: " + (selectedItem.BANCO || '') + " / Ag: " + (selectedItem.AGENCIA || '') + " / CC: " + (selectedItem.CONTA || '');
             $("#dadosBancariosSocio___" + linha).val(dadosBancarios);
 
-            // Dispara a máscara para formatar os campos
             if (typeof DistDividendos !== "undefined" && typeof DistDividendos.aplicarMascaras === "function") {
                 DistDividendos.aplicarMascaras();
             }

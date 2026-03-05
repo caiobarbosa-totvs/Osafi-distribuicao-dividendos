@@ -29,7 +29,7 @@
             <input type="hidden" id="statusIntegracaoRM" name="statusIntegracaoRM" value="">
             <input type="hidden" id="statusDiretoria" name="statusDiretoria" value="">
             <input type="hidden" id="statusControladoria" name="statusControladoria" value="">
-            <input type="hidden" id="statusAssinaturaAta" name="statusAssinaturaAta" value="">	
+            <input type="hidden" id="statusAssinaturaAta" name="statusAssinaturaAta" value="">
             <input type="hidden" id="possuiSaldoRemanescente" name="possuiSaldoRemanescente" value="">
 
 
@@ -128,13 +128,15 @@
                                                     <!-- Linha 1: Ano e Regime -->
                                                     <div class="row">
                                                         <div class="form-group col-md-3">
-                                                            <label for="anoReferencia">Ano de Referência</label>
+                                                            <label for="anoReferencia">Ano de Referência <span
+                                                                    class="text-danger">*</span></label>
                                                             <input type="number" class="form-control"
                                                                 name="anoReferencia" id="anoReferencia"
                                                                 placeholder="Ex: 2025">
                                                         </div>
                                                         <div class="form-group col-md-3">
-                                                            <label for="regimeTributario">Regime Tributário</label>
+                                                            <label for="regimeTributario">Regime Tributário <span
+                                                                    class="text-danger">*</span></label>
                                                             <select class="form-control" name="regimeTributario"
                                                                 id="regimeTributario">
                                                                 <option value="">Selecione...</option>
@@ -150,14 +152,14 @@
                                                     <div class="row">
                                                         <div class="form-group col-md-4">
                                                             <label for="receitaBruta">Receita Bruta do Período
-                                                                (R$)</label>
+                                                                (R$) <span class="text-danger">*</span></label>
                                                             <input type="text" class="form-control money"
                                                                 name="receitaBruta" id="receitaBruta"
                                                                 placeholder="0,00">
                                                         </div>
                                                         <div class="form-group col-md-4">
                                                             <label for="basePresumida">Base de Cálculo Presumida
-                                                                (%)</label>
+                                                                (%) <span class="text-danger">*</span></label>
                                                             <input type="number" class="form-control"
                                                                 name="basePresumida" id="basePresumida"
                                                                 placeholder="Ex: 32">
@@ -176,7 +178,8 @@
                                                     <!-- Linha 3: Origem do Lucro -->
                                                     <div class="row">
                                                         <div class="form-group col-md-6">
-                                                            <label>Origem do Lucro</label>
+                                                            <label>Origem do Lucro <span
+                                                                    class="text-danger">*</span></label>
                                                             <div class="radio">
                                                                 <label><input type="radio" name="origemLucro"
                                                                         id="origemCorrente" value="corrente"> Lucro do
@@ -192,9 +195,11 @@
 
                                                     <!-- Linha 4: Valor Proposto -->
                                                     <div class="row">
+
+                                                        <!-- Coluna 1: Valor Proposto (4/12) -->
                                                         <div class="form-group col-md-4">
                                                             <label for="valorProposto">Valor Proposto para Distribuição
-                                                                (R$)</label>
+                                                                (R$) <span class="text-danger">*</span></label>
                                                             <input type="text" class="form-control money"
                                                                 name="valorProposto" id="valorProposto"
                                                                 placeholder="0,00">
@@ -203,20 +208,42 @@
                                                                 <strong>⚠ Excede Limite Isento</strong>
                                                             </span>
                                                         </div>
+
+                                                        <!-- Coluna 2: NOVO CAMPO Empresa/Filial (4/12) -->
                                                         <div class="form-group col-md-4">
-                                                            <label for="centroCusto">Centro de Custos</label>
+                                                            <label for="empresaFilial">Empresa/Filial <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="zoom" class="form-control" name="empresaFilial"
+                                                                id="empresaFilial" data-zoom="{
+                                                                'displayKey': 'CAMPO_ZOOM',
+                                                                'datasetId': 'ds_dividendos_rm_filial',
+                                                                'maximumSelectionLength': '1',
+                                                                'placeholder': 'Selecione a Filial...',
+                                                                'fields': [
+                                                                    { 'field': 'CODCOLIGADA', 'label': 'Código' },
+                                                                    { 'field': 'NOME', 'label': 'Razão Social', 'standard': 'true' },
+                                                                    { 'field': 'CNPJ', 'label': 'CNPJ' }
+                                                                ]
+                                                            }">
+                                                        </div>
+
+                                                        <!-- Coluna 3: Centro de Custos (4/12) -->
+                                                        <div class="form-group col-md-4">
+                                                            <label for="centroCusto">Centro de Custos <span
+                                                                    class="text-danger">*</span></label>
                                                             <input type="zoom" class="form-control" name="centroCusto"
                                                                 id="centroCusto" data-zoom="{
-                                                                    'displayKey': 'NOME_CENTRO_CUSTO',
-                                                                    'datasetId': 'ds_rm_centro_custo',
-                                                                    'maximumSelectionLength': '1',
-                                                                    'placeholder': 'Selecione o Centro de Custo...',
-                                                                    'fields': [
-                                                                        { 'field': 'CODIGO', 'label': 'Código' },
-                                                                        { 'field': 'NOME_CENTRO_CUSTO', 'label': 'Nome', 'standard': 'true' }
-                                                                    ]
-                                                                }">
+                                                                'displayKey': 'CAMPO_ZOOM',
+                                                                'datasetId': 'ds_dividendos_rm_centro_custo',
+                                                                'maximumSelectionLength': '1',
+                                                                'placeholder': 'Selecione o Centro de Custo...',
+                                                                'fields': [
+                                                                    { 'field': 'CODCCUSTO', 'label': 'Código' },
+                                                                    { 'field': 'NOME', 'label': 'Nome', 'standard': 'true' }
+                                                                ]
+                                                            }">
                                                         </div>
+
                                                     </div>
                                                 </div>
                                             </div>
@@ -247,11 +274,15 @@
                                                             <thead>
                                                                 <tr>
                                                                     <th style="width: 25%">Nome / Razão Social do Sócio
+                                                                        <span class="text-danger">*</span>
                                                                     </th>
                                                                     <th style="width: 15%">CPF / CNPJ</th>
-                                                                    <th style="width: 15%">Participação (%)</th>
-                                                                    <th style="width: 20%">Valor a Receber (R$)</th>
-                                                                    <th style="width: 25%">Dados Bancários</th>
+                                                                    <th style="width: 15%">Participação (%) <span
+                                                                            class="text-danger">*</span></th>
+                                                                    <th style="width: 20%">
+                                                                        Valor a Receber (R$)</th>
+                                                                    <th style="width: 25%">Dados Bancários <span
+                                                                            class="text-danger">*</span></th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -259,7 +290,7 @@
                                                                     <td><input type="zoom" class="form-control"
                                                                             name="nomeSocio" id="nomeSocio" data-zoom="{
                                                                                 'displayKey': 'NOME_SOCIO',
-                                                                                'datasetId': 'ds_rm_socios',
+                                                                                'datasetId': 'ds_dividendos_rm_socio',
                                                                                 'maximumSelectionLength': '1',
                                                                                 'placeholder': 'Buscar Sócio...',
                                                                                 'fields': [
@@ -351,7 +382,8 @@
                                                     <!-- Linha 1: Decisão e Motivo de Rejeição -->
                                                     <div class="row">
                                                         <div class="form-group col-md-4">
-                                                            <label>Decisão da Diretoria</label>
+                                                            <label>Decisão da Diretoria <span
+                                                                    class="text-danger">*</span></label>
                                                             <div class="radio">
                                                                 <label>
                                                                     <input type="radio" name="decisaoDiretoria"
@@ -370,8 +402,8 @@
 
                                                         <div class="form-group col-md-8" id="divMotivoRejeicao"
                                                             style="display: none;">
-                                                            <label for="motivoRejeicaoDir">Motivo da Rejeição
-                                                                (Obrigatório em caso de recusa)</label>
+                                                            <label for="motivoRejeicaoDir">Motivo da Rejeição <span
+                                                                    class="text-danger">*</span></label>
                                                             <select class="form-control" name="motivoRejeicaoDir"
                                                                 id="motivoRejeicaoDir">
                                                                 <option value="">Selecione o motivo...</option>
@@ -421,8 +453,8 @@
                                                     <!-- Linha 1: Checklist -->
                                                     <div class="row">
                                                         <div class="form-group col-md-12">
-                                                            <label>Checklist Fiscal e Conformidade (Obrigatórios para
-                                                                aprovação)</label>
+                                                            <label>Checklist Fiscal e Conformidade <span
+                                                                    class="text-danger">*</span></label>
                                                             <div class="checkbox">
                                                                 <label>
                                                                     <input type="checkbox" name="checkRegime"
@@ -453,7 +485,7 @@
                                                     <div class="row">
                                                         <div class="form-group col-md-4">
                                                             <label for="decisaoControladoria">Decisão da
-                                                                Controladoria</label>
+                                                                Controladoria <span class="text-danger">*</span></label>
                                                             <select class="form-control" name="decisaoControladoria"
                                                                 id="decisaoControladoria">
                                                                 <option value="">Selecione...</option>
@@ -467,7 +499,7 @@
                                                         </div>
                                                         <div class="form-group col-md-8">
                                                             <label for="parecerControladoria">Parecer da Controladoria /
-                                                                Recomendações</label>
+                                                                Recomendações <span class="text-danger">*</span></label>
                                                             <textarea class="form-control" name="parecerControladoria"
                                                                 id="parecerControladoria" rows="3"
                                                                 placeholder="Digite o parecer técnico, recomendações ou ressalvas..."></textarea>
@@ -532,17 +564,20 @@
                                                     <!-- Linha 1: Dados Gerais da Ata -->
                                                     <div class="row">
                                                         <div class="form-group col-md-4">
-                                                            <label for="dataAta">Data da Ata</label>
+                                                            <label for="dataAta">Data da Ata <span
+                                                                    class="text-danger">*</span></label>
                                                             <input type="date" class="form-control" name="dataAta"
                                                                 id="dataAta">
                                                         </div>
                                                         <div class="form-group col-md-4">
-                                                            <label for="localAta">Local</label>
+                                                            <label for="localAta">Local <span
+                                                                    class="text-danger">*</span></label>
                                                             <input type="text" class="form-control" name="localAta"
                                                                 id="localAta" placeholder="Ex: Sede da Empresa">
                                                         </div>
                                                         <div class="form-group col-md-4">
-                                                            <label for="horarioAta">Horário</label>
+                                                            <label for="horarioAta">Horário <span
+                                                                    class="text-danger">*</span></label>
                                                             <input type="time" class="form-control" name="horarioAta"
                                                                 id="horarioAta">
                                                         </div>
@@ -552,21 +587,22 @@
                                                     <div class="row">
                                                         <div class="form-group col-md-4">
                                                             <label for="periodoReferenciaAta">Período de Referência
-                                                                (De/Até)</label>
+                                                                (De/Até) <span class="text-danger">*</span></label>
                                                             <input type="text" class="form-control"
                                                                 name="periodoReferenciaAta" id="periodoReferenciaAta"
                                                                 placeholder="Ex: 01/01/2024 a 31/12/2024">
                                                         </div>
                                                         <div class="form-group col-md-4">
                                                             <label for="resultadoLiquido">Resultado Líquido do Exercício
-                                                                (R$)</label>
+                                                                (R$) <span class="text-danger">*</span></label>
                                                             <input type="text" class="form-control money"
                                                                 name="resultadoLiquido" id="resultadoLiquido"
                                                                 placeholder="0,00">
                                                         </div>
                                                         <div class="form-group col-md-4">
                                                             <label for="totalDisponivel">Total Disponível para
-                                                                Distribuição (R$)</label>
+                                                                Distribuição (R$) <span
+                                                                    class="text-danger">*</span></label>
                                                             <input type="text" class="form-control money"
                                                                 name="totalDisponivel" id="totalDisponivel"
                                                                 placeholder="0,00">
@@ -578,13 +614,15 @@
                                                     <!-- Linha 3: Assinantes e Justificativa -->
                                                     <div class="row">
                                                         <div class="form-group col-md-4">
-                                                            <label>Assinantes (Integração Qualysign)</label>
+                                                            <label>Assinantes (Integração Qualysign) <span
+                                                                    class="text-danger">*</span></label>
                                                             <div class="checkbox">
                                                                 <label>
                                                                     <input type="checkbox"
                                                                         name="assinaturaRepresentante"
                                                                         id="assinaturaRepresentante" value="sim">
-                                                                    Representante Legal (Obrigatório)
+                                                                    Representante Legal <span
+                                                                        class="text-danger">*</span>
                                                                 </label>
                                                             </div>
                                                             <div class="checkbox">
@@ -597,7 +635,8 @@
                                                         </div>
                                                         <div class="form-group col-md-8">
                                                             <label for="justificativaAta">Justificativa da Distribuição
-                                                                e Impacto Financeiro</label>
+                                                                e Impacto Financeiro <span
+                                                                    class="text-danger">*</span></label>
                                                             <textarea class="form-control" name="justificativaAta"
                                                                 id="justificativaAta" rows="3"
                                                                 placeholder="Detalhes para constar no documento legal..."></textarea>
@@ -634,8 +673,10 @@
                                                             <thead>
                                                                 <tr>
                                                                     <th style="width: 25%">Sócio Favorecido</th>
-                                                                    <th style="width: 20%">Data Programada</th>
-                                                                    <th style="width: 20%">Status do Pagamento</th>
+                                                                    <th style="width: 20%">Data Programada <span
+                                                                            class="text-danger">*</span>/th>
+                                                                    <th style="width: 20%">Status do Pagamento <span
+                                                                            class="text-danger">*</span></th>
                                                                     <th style="width: 20%">Data Efetiva (Qive)</th>
                                                                     <th style="width: 15%">Protocolo Bancário</th>
                                                                 </tr>
