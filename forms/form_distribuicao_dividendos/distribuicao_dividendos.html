@@ -236,7 +236,7 @@
                                                                     class="text-danger">*</span></label>
                                                             <input type="zoom" class="form-control" name="empresaFilial"
                                                                 id="empresaFilial" data-zoom="{
-                                                                'displayKey': 'CAMPO_ZOOM',
+                                                                'displayKey': 'NOME',
                                                                 'datasetId': 'ds_dividendos_rm_filial',
                                                                 'maximumSelectionLength': '1',
                                                                 'placeholder': 'Selecione a Filial...',
@@ -254,7 +254,7 @@
                                                                     class="text-danger">*</span></label>
                                                             <input type="zoom" class="form-control" name="centroCusto"
                                                                 id="centroCusto" data-zoom="{
-                                                                'displayKey': 'CAMPO_ZOOM',
+                                                                'displayKey': 'NOME',
                                                                 'datasetId': 'ds_dividendos_rm_centro_custo',
                                                                 'maximumSelectionLength': '1',
                                                                 'placeholder': 'Selecione o Centro de Custo...',
@@ -357,9 +357,9 @@
                                                                             'maximumSelectionLength': '1',
                                                                             'placeholder': 'C. Custo...',
                                                                             'fields': [
-                                                                                { 'field': 'CODCCUSTO', 'label': 'Código' },
-                                                                                { 'field': 'NOME', 'label': 'Nome', 'standard': 'true' }
-                                                                            ]
+                                                                                { 'field': 'CODCCUSTO', 'label': 'Código', 'visable': 'false' },
+                                                                                { 'field': 'NOME', 'label': 'Nome', 'visable': 'false'},
+                                                                                { 'field': 'CAMPO_ZOOM', 'label': 'Coligada', 'standard': 'true' }                                                                            ]
                                                                         }">
                                                                     </td>
 

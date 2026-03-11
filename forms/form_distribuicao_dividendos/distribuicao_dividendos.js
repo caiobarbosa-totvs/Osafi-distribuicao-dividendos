@@ -126,7 +126,7 @@ var DistDividendos = {
 
          // --- EVENTO 4: Cálculo da Compensação de Antecipações  ---
         $('#tabela_pagamentos').on('blur', "input[id^='pagValorAntecipado___']", function () {
-            var linha = $(this).attr('id').split('___')[12];
+            var linha = $(this).attr('id').split('___')[1];
             
             // Pega o Bruto (vamos supor que você copiou o valor do rateio para cá via integração ou manual)
             var bruto = DistDividendos.getFloatValue($("#pagValorBruto___" + linha).val());
@@ -341,7 +341,11 @@ function setSelectedZoomItem(selectedItem) {
     // 1. Filtro em Cascata (Empresa/Filial -> Centro de Custos)
     if (inputId == "empresaFilial") {
         // Ao selecionar a Empresa/Filial, recarrega o zoom de Centro de Custos.
-        // ATENÇÃO: Substitua "CODCOLIGADA" pela coluna real que faz o filtro no seu dataset 'ds_rm_centro_custo'
+        reloadZoomFilterValues("centroCusto", "CODCOLIGADA," + selectedItem.CODCOLIGADA);
+    }
+	
+	if (inputId == "nomeSocio") {
+        // Ao selecionar a Empresa/Filial, recarrega o zoom de Centro de Custos.
         reloadZoomFilterValues("centroCusto", "CODCOLIGADA," + selectedItem.CODCOLIGADA);
     }
 
@@ -383,9 +387,7 @@ function removedZoomItem(removedItem) {
     // 1. Limpeza em Cascata
     if (inputId == "empresaFilial") {
         // Se a Empresa/Filial for apagada, limpa o filtro do Centro de Custos
-        reloadZoomFilterValues("centroCusto", "");
-        // Esvazia visualmente qualquer Centro de Custo que já estivesse preenchido
-        setZoomData("centroCusto", "");
+        reloadZoomFilterValues("centroCusto", "CODCOLIGADA," + "");
     }
 
     // 2. LÓGICA ORIGINAL MANTIDA
