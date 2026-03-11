@@ -6,17 +6,18 @@ function createDataset(fields, constraints, sortFields) {
     dataset.addColumn("CODCCUSTO");
     dataset.addColumn("NOME");
     dataset.addColumn("CAMPO_ZOOM");
-    
+
     // 2. Parâmetros Oficiais do RM
-    var codSentenca  = 'FLUIG.023'; // Sentença real do modelo
-    var codAplicacao = 'T';         // Sistema real do modelo
-    var codColigada  = '1';         // Valor padrão
+    var codSentenca = "FLUIG.023";
+    var codColigada = 0; // 
+    var codSistema = "T";
+ 	var coligada = ""; // parâmetro SQL
 
     // Captura a coligada enviada como filtro pelo Front-end
     if (constraints != null) {
         for (var i = 0; i < constraints.length; i++) {
             if (constraints[i].fieldName.toUpperCase() == 'CODCOLIGADA') {
-                codColigada = constraints[i].initialValue;
+                coligada = constraints[i].initialValue;
             }
         }
     }
@@ -28,20 +29,19 @@ function createDataset(fields, constraints, sortFields) {
     params.push(DatasetFactory.createConstraint("CODSENTENCA", codSentenca, codSentenca, ConstraintType.MUST));
     params.push(DatasetFactory.createConstraint("CODAPLICACAO", codAplicacao, codAplicacao, ConstraintType.MUST));
     params.push(DatasetFactory.createConstraint("CODCOLIGADA", codColigada, codColigada, ConstraintType.MUST));
+ 	params.push(DatasetFactory.createConstraint("COLIGADA", coligada, coligada, ConstraintType.MUST));
 
     try {
         // 3. Chamada limpa utilizando a nossa arquitetura (Single Source of Truth)
-        var datasetRM = DatasetFactory.getDataset("ds_dividendos_generic_rm_sql", campos, params, null);
+        var datasetRM = DatasetFactory.getDataset("ds_generic_rm_sql", campos, params, null);
 
         if (datasetRM != null && datasetRM.rowsCount > 0) {
             for (var i = 0; i < datasetRM.rowsCount; i++) {
-                
                 // Extração dos dados
                 var retColigada = datasetRM.getValue(i, "CODCOLIGADA");
                 var codCCusto   = datasetRM.getValue(i, "CODCCUSTO");
                 var nome        = datasetRM.getValue(i, "NOME");
-                
-                // 4. Regra Oficial Replicada: Concatenação para o Fluig
+
                 var campoZoom = codCCusto + " - " + nome;
 
                 // Adiciona a linha formatada no dataset
@@ -49,7 +49,6 @@ function createDataset(fields, constraints, sortFields) {
             }
         }
         return dataset;
-
     } catch (e) {
         log.error("ERRO [ds_dividendos_rm_centro_custo]: " + e.toString());
         return dataset;
