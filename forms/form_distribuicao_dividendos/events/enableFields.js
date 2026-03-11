@@ -45,7 +45,7 @@ function enableFields(form) {
     // ======================================================================
 
     // ETAPA 2: Aprovação da Diretoria (Não pode mexer no Planejamento)
-    if (atividadeAtual === APROVACAO_CONSELHO) {
+	if (atividadeAtual === APROVACAO_CONSELHO) {
         bloquearPlanejamentoFinanceiro(form);
     } 
     
@@ -57,14 +57,18 @@ function enableFields(form) {
     
     // ETAPAS 4 e 5: Ata e Execução Financeira (Histórico intocável)
     else if (etapasAta.indexOf(atividadeAtual) > -1 || etapasFinanceiro.indexOf(atividadeAtual) > -1) {
-        // Bloqueia todo o histórico inicial
+        
+        // Bloqueia todo o histórico inicial para todos
         bloquearPlanejamentoFinanceiro(form);
         bloquearDiretoria(form);
         bloquearControladoria(form);
 
-        // Se já chegou na parte do Financeiro, quem gera os pagamentos não pode alterar a Ata que foi gerada e assinada.
         if (etapasFinanceiro.indexOf(atividadeAtual) > -1) {
+            // Se já chegou no Financeiro, ele não pode alterar a Ata
             bloquearAta(form);
+        } else {
+            // Se estiver na etapa da Ata, o analista não pode alterar os Pagamentos
+            bloquearFinanceiro(form);
         }
     }
 }
@@ -75,6 +79,7 @@ function enableFields(form) {
 // ==========================================================================
 
 function bloquearPlanejamentoFinanceiro(form) {
+    // 1. Bloqueia os campos fixos do cabeçalho
     form.setEnabled("anoReferencia", false);
     form.setEnabled("regimeTributario", false);
     form.setEnabled("receitaBruta", false);
@@ -84,15 +89,21 @@ function bloquearPlanejamentoFinanceiro(form) {
     form.setEnabled("empresaFilial", false);
     form.setEnabled("centroCusto", false);
 
-    // Bloqueia todos os campos de todas as linhas da Tabela Pai x Filho de Sócios
+    // 2. Bloqueia todos os campos das novas colunas da Tabela Pai x Filho de Sócios
     var indicesSocios = form.getChildrenIndexes("tabela_socios");
     for (var i = 0; i < indicesSocios.length; i++) {
         var linha = indicesSocios[i];
+        
+        // Bloqueio das colunas refatoradas
         form.setEnabled("nomeSocio___" + linha, false);
         form.setEnabled("cpfCnpjSocio___" + linha, false);
-        form.setEnabled("percSocio___" + linha, false);
+        form.setEnabled("centroCustoSocio___" + linha, false); 
+        form.setEnabled("percCapitalSocio___" + linha, false); 
+        form.setEnabled("percDistSocio___" + linha, false);    
         form.setEnabled("valorSocio___" + linha, false);
-        form.setEnabled("dadosBancariosSocio___" + linha, false);
+        form.setEnabled("bancoSocio___" + linha, false);       
+        form.setEnabled("agenciaSocio___" + linha, false);     
+        form.setEnabled("contaSocio___" + linha, false);       
     }
 }
 
@@ -121,3 +132,21 @@ function bloquearAta(form) {
     form.setEnabled("assinaturaFinanceiro", false);
     form.setEnabled("justificativaAta", false);
 }
+
+function bloquearFinanceiro(form) {
+    var indicesPagamentos = form.getChildrenIndexes("tabela_pagamentos");
+    for (var i = 0; i < indicesPagamentos.length; i++) {
+        var linha = indicesPagamentos[i];
+
+
+		// Colunas de Compensação
+        form.setEnabled("pagValorBruto___" + linha, false);
+        form.setEnabled("pagValorAntecipado___" + linha, false);
+        form.setEnabled("pagSaldoPagar___" + linha, false);
+
+        form.setEnabled("pagDataProgramada___" + linha, false);
+        form.setEnabled("pagStatus___" + linha, false);
+        form.setEnabled("pagDataEfetiva___" + linha, false);
+        form.setEnabled("pagProtocolo___" + linha, false);
+    }
+}	

@@ -56,6 +56,11 @@ function validateForm(form) {
         if (form.getValue("origemLucro") == null || form.getValue("origemLucro") == "") {
             msgErro += "- A 'Origem do Lucro' (Corrente ou Anterior) deve ser selecionada.<br>";
         }
+		if (form.getValue("origemLucro") == "consolidacao") {
+        if (form.getValue("solicitacoesVinculadas") == "") {
+            msgErro += "- Para a Consolidação, é obrigatório informar o número das 'Solicitações Vinculadas' (Trilha de Auditoria).<br>";
+        }
+    }
         if (form.getValue("valorProposto") == "") {
             msgErro += "- O 'Valor Proposto para Distribuição' é obrigatório.<br>";
         }
@@ -66,25 +71,52 @@ function validateForm(form) {
             msgErro += "- O 'Centro de Custos' é obrigatório.<br>";
         }
 
+		
+
         // 1.2 Validação da Tabela Pai x Filho (Distribuição por Sócio)
+        // 1.2 Validação da Tabela Pai x Filho (Distribuição por Sócio) e Bloqueio Matemático
         var indicesSocios = form.getChildrenIndexes("tabela_socios");
 
         if (indicesSocios.length == 0) {
             msgErro += "- É obrigatório adicionar pelo menos um sócio na Tabela de Rateio.<br>";
         } else {
+            // Variáveis para o Muro de Contenção Matemático
+            var somaPercentual = 0;
+            var somaValores = 0;
+            
+            // Pega o valor proposto e já converte para número (float)
+            var valorProposto = getFloatValue(form.getValue("valorProposto"));
+
             for (var i = 0; i < indicesSocios.length; i++) {
                 var linha = indicesSocios[i];
                 var numeroLinhaReal = i + 1;
 
+                // Validação de Preenchimento Obrigatório das novas colunas
                 if (form.getValue("nomeSocio___" + linha) == "") {
                     msgErro += "- O Sócio da linha " + numeroLinhaReal + " não foi informado.<br>";
                 }
-                if (form.getValue("percSocio___" + linha) == "") {
-                    msgErro += "- O Percentual de Participação da linha " + numeroLinhaReal + " é obrigatório.<br>";
+                if (form.getValue("centroCustoSocio___" + linha) == "") {
+                    msgErro += "- O Centro de Custo (Rateio) da linha " + numeroLinhaReal + " é obrigatório.<br>";
                 }
-                if (form.getValue("dadosBancariosSocio___" + linha) == "") {
-                    msgErro += "- Os Dados Bancários do sócio na linha " + numeroLinhaReal + " são obrigatórios.<br>";
+                if (form.getValue("percDistSocio___" + linha) == "") {
+                    msgErro += "- O Percentual de Distribuição da linha " + numeroLinhaReal + " é obrigatório.<br>";
                 }
+                if (form.getValue("bancoSocio___" + linha) == "" || form.getValue("agenciaSocio___" + linha) == "" || form.getValue("contaSocio___" + linha) == "") {
+                    msgErro += "- Os Dados Bancários (Banco, Agência e Conta) do sócio na linha " + numeroLinhaReal + " são obrigatórios.<br>";
+                }
+
+                // Acumula os valores para a prova real (Matemática)
+                somaPercentual += getFloatValue(form.getValue("percDistSocio___" + linha));
+                somaValores += getFloatValue(form.getValue("valorSocio___" + linha));
+            }
+
+            // 1.3 Regra de Negócio (O Muro de Contenção)
+            if (somaPercentual.toFixed(2) !== "100.00") {
+                msgErro += "- A soma dos Percentuais de Distribuição deve ser exatos 100% (Total Atual: " + somaPercentual.toFixed(2) + "%).<br>";
+            }
+
+            if (somaValores.toFixed(2) !== valorProposto.toFixed(2)) {
+                msgErro += "- A soma dos Valores a Receber na tabela não bate com o 'Valor Proposto para Distribuição'.<br>";
             }
         }
     } 
@@ -182,6 +214,38 @@ function validateForm(form) {
             }
         }
     }
+	else if (atividadeAtual === ANEXACAO_COMPROVANTE || atividadeAtual === CONCILIACAO_FINANCEIRA_REGULAR || atividadeAtual === CONCILICACAO_CONTABIL) {
+            
+				var indicesPagamentos = form.getChildrenIndexes("tabela_pagamentos");
+				
+				for (var k = 0; k < indicesPagamentos.length; k++) {
+                var linhaVal = indicesPagamentos[k];
+                var numeroVal = k + 1;
+                
+                if (form.getValue("pagStatus___" + linhaVal) !== "Liquidado") {
+                    msgErro += "- Para avançar nas etapas de conciliação, todos os status na linha " + numeroVal + " devem estar como 'Liquidado'.<br>";
+                }
+                if (form.getValue("pagDataEfetiva___" + linhaVal) == "") {
+                    msgErro += "- A 'Data Efetiva (Qive)' da linha " + numeroVal + " é obrigatória para comprovação.<br>";
+                }
+                if (form.getValue("pagProtocolo___" + linhaVal) == "") {
+                    msgErro += "- O 'Protocolo Bancário' da linha " + numeroVal + " é obrigatório para auditoria.<br>";
+                }
+            }
+            
+            // Validação do Gateway Final
+            if (atividadeAtual === CONCILICACAO_CONTABIL) {
+                
+                // Exige o Checklist
+                if (form.getValue("auditAta") != "sim" || form.getValue("auditValores") != "sim" || form.getValue("auditImpostos") != "sim") {
+                    msgErro += "- Para encerrar o processo, todos os itens do Checklist de Auditoria devem ser validados.<br>";
+                }
+                
+                if (form.getValue("decisaoSaldoFinal") == null || form.getValue("decisaoSaldoFinal") == "") {
+                    msgErro += "- A auditoria exige que seja informada se há Saldo Remanescente para encerrar o processo.<br>";
+                }
+            }
+        }
 
     // ----------------------------------------------------------------------
     // DISPARO DO ALERTA E BLOQUEIO DO FORMULÁRIO
@@ -189,4 +253,18 @@ function validateForm(form) {
     if (msgErro !== "") {
         throw "<br><br><strong>Atenção! Verifique os seguintes campos obrigatórios antes de enviar:</strong><br><br>" + msgErro;
     }
+}
+
+// ==========================================================================
+// FUNÇÕES AUXILIARES DE BACK-END
+// ==========================================================================
+
+// Converte String monetária do formulário ('1.500,50') para Float do Servidor (1500.50)
+function getFloatValue(valorString) {
+    if (valorString == null || valorString == undefined || valorString == "") {
+        return 0;
+    }
+    // Remove os pontos de milhar e troca a vírgula decimal por ponto
+    var valorLimpo = String(valorString).replace(/\./g, '').replace(',', '.');
+    return parseFloat(valorLimpo) || 0;
 }
