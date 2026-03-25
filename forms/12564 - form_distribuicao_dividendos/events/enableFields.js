@@ -5,7 +5,7 @@ function enableFields(form) {
     var INICIALIZACAO = 1;
     var PLANEJADOR_FINANCEIRO = 2;
     var APROVACAO_CONSELHO = 4;
-    var AVALICAO_TECNICA = 6;
+    var AVALIACAO_TECNICA = 6;
     var GATEWAY_APROVACAO_1 = 65;
     var REJEICAO_FIM = 19;
     var GATEWAY_DECISAO_2 = 68;
@@ -20,23 +20,24 @@ function enableFields(form) {
     var GATEWAY_SALDO_EXISTENTE_4 = 76;
     var FIM = 40;
 
-    var INTEGRACAO_RM_TOTVS = 23;
+    var INTEGRACAO_RM_TOTVS = 89;
     var PROGRAMACAO_PAGAMENTOS = 25;
     var VALIDACAO_PAGAMENTO = 27;
     var CONCILIACAO_FINANCEIRA = 32;
     var ANEXACAO_COMPROVANTE = 33;
     var INTEGRACAO_CONTABIL = 43;
-    var CONCILICACAO_CONTABIL = 44;
+    var CONCILIACAO_CONTABIL = 44;
 
     // 2. CAPTURA DO ESTADO ATUAL (Convertido para Inteiro)
-    var atividadeAtual = getValue("WKNumState") != null ? parseInt(getValue("WKNumState")) : INICIO;
-
-    // 3. AGRUPAMENTOS DE ETAPAS (Para simplificar os IFs)
+    var state = getValue("WKNumState");
+	var atividadeAtual = (state != null && state !== "" && state !== "null") ? parseInt(state) : INICIO;
+    
+	// 3. AGRUPAMENTOS DE ETAPAS (Para simplificar os IFs)
     var etapasAta = [SOLICITACAO_ATA, ASSINATURA_ATA];
     
     var etapasFinanceiro = [
         PROVISOES_FINANCEIRAS, PROGRAMACAO_PAGAMENTOS, VALIDACAO_PAGAMENTO,
-        CONCILIACAO_FINANCEIRA, ANEXACAO_COMPROVANTE, CONCILICACAO_CONTABIL,
+        CONCILIACAO_FINANCEIRA, ANEXACAO_COMPROVANTE, CONCILIACAO_CONTABIL,
         PROGRAMACAO_PAGAMENTO_REGULAR, CONCILIACAO_FINANCEIRA_REGULAR
     ];
 
@@ -44,24 +45,25 @@ function enableFields(form) {
     // 4. LÓGICA DE BLOQUEIO PROGRESSIVA
     // ======================================================================
 
-    // ETAPA 2: Aprovação da Diretoria (Não pode mexer no Planejamento)
+    // Aprovação da Diretoria (Não pode mexer no Planejamento)
 	if (atividadeAtual === APROVACAO_CONSELHO) {
         bloquearPlanejamentoFinanceiro(form);
     } 
     
-    // ETAPA 3: Avaliação da Controladoria (Não pode mexer no Planejamento nem na Diretoria)
-    else if (atividadeAtual === AVALICAO_TECNICA) {
-        bloquearPlanejamentoFinanceiro(form);
-        bloquearDiretoria(form);
+    // Avaliação da Controladoria (Não pode mexer no Planejamento nem na Diretoria)
+    else if (atividadeAtual === AVALIACAO_TECNICA) {
+	    bloquearDiretoria(form);    
+		bloquearPlanejamentoFinanceiro(form);
+        
     } 
     
-    // ETAPAS 4 e 5: Ata e Execução Financeira (Histórico intocável)
+    // Ata e Execução Financeira (Histórico intocável)
     else if (etapasAta.indexOf(atividadeAtual) > -1 || etapasFinanceiro.indexOf(atividadeAtual) > -1) {
         
         // Bloqueia todo o histórico inicial para todos
-        bloquearPlanejamentoFinanceiro(form);
         bloquearDiretoria(form);
         bloquearControladoria(form);
+		bloquearPlanejamentoFinanceiro(form);
 
         if (etapasFinanceiro.indexOf(atividadeAtual) > -1) {
             // Se já chegou no Financeiro, ele não pode alterar a Ata
@@ -79,31 +81,39 @@ function enableFields(form) {
 // ==========================================================================
 
 function bloquearPlanejamentoFinanceiro(form) {
-    // 1. Bloqueia os campos fixos do cabeçalho
-    form.setEnabled("anoReferencia", false);
-    form.setEnabled("regimeTributario", false);
-    form.setEnabled("receitaBruta", false);
-    form.setEnabled("basePresumida", false);
-    form.setEnabled("origemLucro", false);
-    form.setEnabled("valorProposto", false);
-    form.setEnabled("empresaFilial", false);
-    form.setEnabled("centroCusto", false);
+    // 1. Array de campos fixos (Escalável e limpo)
+    var camposCabecalho = [
+        "anoReferencia", "regimeTributario", "receitaBruta", "basePresumida", 
+        "origemLucro", "valorProposto", "empresaFilial", "centroCusto", "solicitacoesVinculadas"
+    ];
+    
+    // Se um campo não existir, ele não derruba os outros!
+    for (var c = 0; c < camposCabecalho.length; c++) {
+        try {
+            form.setEnabled(camposCabecalho[c], false);
+        } catch (e) {
+            log.info("Aviso de Arquitetura: Campo não encontrado para bloqueio: " + camposCabecalho[c]);
+        }
+    }
 
-    // 2. Bloqueia todos os campos das novas colunas da Tabela Pai x Filho de Sócios
+    // 2. Bloqueia os campos da Tabela Pai x Filho de Sócios
     var indicesSocios = form.getChildrenIndexes("tabela_socios");
     for (var i = 0; i < indicesSocios.length; i++) {
         var linha = indicesSocios[i];
         
-        // Bloqueio das colunas refatoradas
-        form.setEnabled("nomeSocio___" + linha, false);
-        form.setEnabled("cpfCnpjSocio___" + linha, false);
-        form.setEnabled("centroCustoSocio___" + linha, false); 
-        form.setEnabled("percCapitalSocio___" + linha, false); 
-        form.setEnabled("percDistSocio___" + linha, false);    
-        form.setEnabled("valorSocio___" + linha, false);
-        form.setEnabled("bancoSocio___" + linha, false);       
-        form.setEnabled("agenciaSocio___" + linha, false);     
-        form.setEnabled("contaSocio___" + linha, false);       
+        var camposTabela = [
+            "nomeSocio___" + linha, "cpfCnpjSocio___" + linha, "centroCustoSocio___" + linha,
+            "percCapitalSocio___" + linha, "percDistSocio___" + linha, "valorSocio___" + linha,
+            "bancoSocio___" + linha, "agenciaSocio___" + linha, "contaSocio___" + linha
+        ];
+        
+        for (var j = 0; j < camposTabela.length; j++) {
+            try {
+                form.setEnabled(camposTabela[j], false);
+            } catch (e) {
+                log.info("Aviso de Arquitetura: Campo da tabela não encontrado: " + camposTabela[j]);
+            }
+        }
     }
 }
 

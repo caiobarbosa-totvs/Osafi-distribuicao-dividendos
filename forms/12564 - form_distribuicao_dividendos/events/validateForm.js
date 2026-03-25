@@ -5,7 +5,7 @@ function validateForm(form) {
     var INICIALIZACAO = 1;
     var PLANEJADOR_FINANCEIRO = 2;
     var APROVACAO_CONSELHO = 4;
-    var AVALICAO_TECNICA = 6; // Mantido o seu nome original da constante
+    var AVALIACAO_TECNICA = 6; // Mantido o seu nome original da constante
     var GATEWAY_APROVACAO_1 = 65;
     var REJEICAO_FIM = 19;
     var GATEWAY_DECISAO_2 = 68;
@@ -20,13 +20,13 @@ function validateForm(form) {
     var GATEWAY_SALDO_EXISTENTE_4 = 76;
     var FIM = 40;
 
-    var INTEGRACAO_RM_TOTVS = 23;
+    var INTEGRACAO_RM_TOTVS = 89;
     var PROGRAMACAO_PAGAMENTOS = 25;
     var VALIDACAO_PAGAMENTO = 27;
     var CONCILIACAO_FINANCEIRA = 32;
     var ANEXACAO_COMPROVANTE = 33;
     var INTEGRACAO_CONTABIL = 43;
-    var CONCILICACAO_CONTABIL = 44; // Mantido o seu nome original da constante
+    var CONCILIACAO_CONTABIL = 44; // Mantido o seu nome original da constante
 
     // 2. CAPTURA DO ESTADO ATUAL
     // Utilizamos o parseInt para garantir que o WKNumState seja tratado como um número exato para bater com as constantes
@@ -139,7 +139,7 @@ function validateForm(form) {
     // ----------------------------------------------------------------------
     // ETAPA 3: AVALIAÇÃO TÉCNICA / CONTROLADORIA
     // ----------------------------------------------------------------------
-    else if (atividadeAtual === AVALICAO_TECNICA) {
+    else if (atividadeAtual === AVALIACAO_TECNICA) {
         var decisaoControladoria = form.getValue("decisaoControladoria");
 
         if (decisaoControladoria == null || decisaoControladoria == "") {
@@ -214,7 +214,7 @@ function validateForm(form) {
             }
         }
     }
-	else if (atividadeAtual === ANEXACAO_COMPROVANTE || atividadeAtual === CONCILIACAO_FINANCEIRA_REGULAR || atividadeAtual === CONCILICACAO_CONTABIL) {
+	else if (atividadeAtual === ANEXACAO_COMPROVANTE || atividadeAtual === CONCILIACAO_FINANCEIRA_REGULAR || atividadeAtual === CONCILIACAO_CONTABIL) {
             
 				var indicesPagamentos = form.getChildrenIndexes("tabela_pagamentos");
 				
@@ -234,7 +234,7 @@ function validateForm(form) {
             }
             
             // Validação do Gateway Final
-            if (atividadeAtual === CONCILICACAO_CONTABIL) {
+            if (atividadeAtual === CONCILIACAO_CONTABIL) {
                 
                 // Exige o Checklist
                 if (form.getValue("auditAta") != "sim" || form.getValue("auditValores") != "sim" || form.getValue("auditImpostos") != "sim") {

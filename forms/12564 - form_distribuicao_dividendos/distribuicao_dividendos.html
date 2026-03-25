@@ -31,10 +31,82 @@
             <!-- <input type="hidden" id="statusAssinaturaAta" name="statusAssinaturaAta" value=""> -->
             <input type="hidden" id="possuiSaldoRemanescente" name="possuiSaldoRemanescente" value="">
 
-
+            <!-- Motor Oculto para Consulta de Coligadas via JS -->
+            <div style="display:none;">
+                <input type="zoom" class="form-control" name="zoomColigadasOculto" id="zoomColigadasOculto" data-zoom="{
+                    'displayKey': 'CNPJ',
+                    'datasetId': 'ds_dividendos_rm_filial',
+                    'fields': [
+                        { 'field': 'CNPJ', 'label': 'CNPJ' },
+                        { 'field': 'NOME', 'label': 'Razão Social', 'standard': 'true'}
+                    ]
+                }">
+            </div>
 
             <div class="container-fluid">
                 <h2 class="page-header">Distribuição de Dividendos</h2>
+
+                <!-- Dashboards Executivos (Visão Geral) -->
+                <div class="row" id="dashboardSaldos" style="margin-bottom: 25px;">
+                    <!-- Card 1: Saldo de Antecipação -->
+                    <div class="col-md-3">
+                        <div class="panel panel-info text-center">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><span class="fluigicon fluigicon-money-circle icon-sm"></span>
+                                    Saldo Antecipação</h3>
+                            </div>
+                            <div class="panel-body">
+                                <input type="text" class="form-control money text-center" name="dashSaldoAntecipacao"
+                                    id="dashSaldoAntecipacao" readonly placeholder="R$ 0,00"
+                                    style="font-size: 18px; font-weight: bold; color: #31708f; background-color: transparent; border: none; box-shadow: none;">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card 2: Dividendos Pagos -->
+                    <div class="col-md-3">
+                        <div class="panel panel-success text-center">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><span
+                                        class="fluigicon fluigicon-check-circle-on icon-sm"></span> Dividendos Pagos
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <input type="text" class="form-control money text-center" name="dashDividendosPagos"
+                                    id="dashDividendosPagos" readonly placeholder="R$ 0,00"
+                                    style="font-size: 18px; font-weight: bold; color: #3c763d; background-color: transparent; border: none; box-shadow: none;">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card 3: Dividendos a Pagar -->
+                    <div class="col-md-3">
+                        <div class="panel panel-danger text-center">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><span
+                                        class="fluigicon fluigicon-process-history icon-sm"></span> Dividendos a Pagar
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <input type="text" class="form-control money text-center" name="dashDividendosPagar"
+                                    id="dashDividendosPagar" readonly placeholder="R$ 0,00"
+                                    style="font-size: 18px; font-weight: bold; color: #a94442; background-color: transparent; border: none; box-shadow: none;">
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Card 4: Solicitações em Andamento -->
+                    <div class="col-md-3">
+                        <div class="panel panel-warning text-center">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><span class="fluigicon fluigicon-list icon-sm"></span> Em
+                                    Andamento</h3>
+                            </div>
+                            <div class="panel-body">
+                                <input type="text" class="form-control text-center" name="dashSolicitacoesAndamento"
+                                    id="dashSolicitacoesAndamento" readonly placeholder="0"
+                                    style="font-size: 18px; font-weight: bold; color: #8a6d3b; background-color: transparent; border: none; box-shadow: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- dashboardSaldos -->
 
                 <!-- Componente Timeline -->
                 <div class="barraProgresso-wrapper">
@@ -164,14 +236,36 @@
                                                                 placeholder="Ex: 32">
                                                         </div>
                                                         <div class="form-group col-md-4">
-                                                            <label for="limiteIsento">Limite Isento Lei 9.249/95
-                                                                (R$)</label>
+                                                            <label for="limiteIsento">Limite de Isenção do IRRF (R$
+                                                                50.000,00/mês)</label>
                                                             <input type="text" class="form-control" name="limiteIsento"
                                                                 id="limiteIsento" readonly
                                                                 placeholder="Cálculo Automático">
                                                         </div>
                                                     </div>
 
+                                                    <hr>
+                                                    <!-- Nova Linha: Tributação Lei 15.270/2025 -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label for="valorExcedente">Valor Excedente (R$)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="valorExcedente" id="valorExcedente" readonly
+                                                                placeholder="0,00">
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="valorIRRF">Valor do IRRF (10%) (R$)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="valorIRRF" id="valorIRRF" readonly
+                                                                placeholder="0,00">
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="valorLiquidoPagar">Líquido a Pagar (R$)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="valorLiquidoPagar" id="valorLiquidoPagar" readonly
+                                                                placeholder="0,00">
+                                                        </div>
+                                                    </div>
                                                     <hr>
 
                                                     <!-- Linha 3: Origem do Lucro -->
@@ -186,16 +280,36 @@
                                                             </div>
                                                             <div class="radio">
                                                                 <label><input type="radio" name="origemLucro"
-                                                                        id="origemAnterior" value="anterior"> Lucro de
-                                                                    Exercícios Anteriores</label>
+                                                                        id="origemSemDeliberacao"
+                                                                        value="sem_deliberacao"> Lucro Apurados sem
+                                                                    Deliberação em ATA</label>
                                                             </div>
                                                             <div class="radio">
                                                                 <label><input type="radio" name="origemLucro"
-                                                                        id="origemConsolidacao" value="consolidacao">
-                                                                    Consolidação de Antecipações (Fechamento do
-                                                                    Exercício)</label>
+                                                                        id="origemJaDeliberado" value="ja_deliberado">
+                                                                    Lucro já Deliberados em ATA (Baixa de
+                                                                    Provisão)</label>
                                                             </div>
 
+                                                        </div>
+                                                        <!-- Bloco Dinâmico: Aparece apenas se for Lucro já Deliberado -->
+                                                        <div class="row col-ja-deliberado"
+                                                            style="display:none; margin-top: 15px;">
+                                                            <div class="form-group col-md-4">
+                                                                <label for="dataAtaAnterior">Data da Ata Anterior <span
+                                                                        class="text-danger">*</span></label>
+                                                                <input type="date" class="form-control"
+                                                                    name="dataAtaAnterior" id="dataAtaAnterior">
+                                                            </div>
+                                                            <div class="form-group col-md-8">
+                                                                <br>
+                                                                <!-- Espaçamento para alinhar com o campo de data -->
+                                                                <div id="alertaRegraTransicao" class="alert alert-info"
+                                                                    style="margin-bottom: 0; padding: 6px 15px;">
+                                                                    Selecione a data da Ata para verificar a regra de
+                                                                    tributação.
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                         <div class="row col-consolidacao" style="display:none;">
                                                             <div class="form-group col-md-12">
@@ -214,11 +328,12 @@
                                                         </div>
                                                     </div>
 
+
                                                     <!-- Linha 4: Valor Proposto -->
                                                     <div class="row">
 
                                                         <!-- Coluna 1: Valor Proposto (4/12) -->
-                                                        <div class="form-group col-md-4">
+                                                        <div class="form-group col-md-3">
                                                             <label for="valorProposto">Valor Proposto para Distribuição
                                                                 (R$) <span class="text-danger">*</span></label>
                                                             <input type="text" class="form-control money"
@@ -228,10 +343,14 @@
                                                                 style="display:none;">
                                                                 <strong>⚠ Excede Limite Isento</strong>
                                                             </span>
+                                                            <span id="alertaTributacao" class="text-warning"
+                                                                style="display:none;">
+                                                                <strong>⚠ Tributado pela Lei 15.270/2025</strong>
+                                                            </span>
                                                         </div>
 
                                                         <!-- Coluna 2: NOVO CAMPO Empresa/Filial (4/12) -->
-                                                        <div class="form-group col-md-4">
+                                                        <div class="form-group col-md-3">
                                                             <label for="empresaFilial">Empresa/Filial <span
                                                                     class="text-danger">*</span></label>
                                                             <input type="zoom" class="form-control" name="empresaFilial"
@@ -249,7 +368,7 @@
                                                         </div>
 
                                                         <!-- Coluna 3: Centro de Custos (4/12) -->
-                                                        <div class="form-group col-md-4">
+                                                        <div class="form-group col-md-3">
                                                             <label for="centroCusto">Centro de Custos <span
                                                                     class="text-danger">*</span></label>
                                                             <input type="zoom" class="form-control" name="centroCusto"
@@ -260,6 +379,24 @@
                                                                 'placeholder': 'Selecione o Centro de Custo...',
                                                                 'fields': [
                                                                     { 'field': 'CODCCUSTO', 'label': 'Código' },
+                                                                    { 'field': 'NOME', 'label': 'Nome', 'standard': 'true' }
+                                                                ]
+                                                            }">
+                                                        </div>
+
+                                                        <!-- Coluna 4: Natureza Orçamentária (3/12) -->
+                                                        <div class="form-group col-md-3">
+                                                            <label for="naturezaOrcamentaria">Nat. Orçamentária <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="zoom" class="form-control"
+                                                                name="naturezaOrcamentaria" id="naturezaOrcamentaria"
+                                                                data-zoom="{
+                                                                'displayKey': 'NOME',
+                                                                'datasetId': 'ds_dividendos_rm_natureza',
+                                                                'maximumSelectionLength': '1',
+                                                                'placeholder': 'Selecione a Natureza...',
+                                                                'fields': [
+                                                                    { 'field': 'CODNAT', 'label': 'Código' },
                                                                     { 'field': 'NOME', 'label': 'Nome', 'standard': 'true' }
                                                                 ]
                                                             }">
@@ -301,6 +438,9 @@
                                                                     <th style="min-width: 150px;">CPF / CNPJ</th>
                                                                     <th style="min-width: 250px;">Centro de Custo
                                                                         (Rateio) <span class="text-danger">*</span></th>
+                                                                    <th style="min-width: 250px;">Natureza Orçamentária
+                                                                        <span class="text-danger">*</span>
+                                                                    </th>
                                                                     <th style="min-width: 120px;">% Capital</th>
                                                                     <th style="min-width: 120px;">% Dist. <span
                                                                             class="text-danger">*</span></th>
@@ -360,6 +500,22 @@
                                                                                 { 'field': 'CODCCUSTO', 'label': 'Código', 'visable': 'false' },
                                                                                 { 'field': 'NOME', 'label': 'Nome', 'visable': 'false'},
                                                                                 { 'field': 'CAMPO_ZOOM', 'label': 'Coligada', 'standard': 'true' }                                                                            ]
+                                                                        }">
+                                                                    </td>
+                                                                    <!-- Novo Zoom: Natureza Orçamentária da Linha -->
+                                                                    <td>
+                                                                        <input type="zoom" class="form-control"
+                                                                            name="naturezaOrcamentariaSocio"
+                                                                            id="naturezaOrcamentariaSocio" data-zoom="{
+                                                                            'displayKey': 'NOME',
+                                                                            'datasetId': 'DS_NATUREZA_ORCAMENTARIA_FLUIG_20',
+                                                                            'maximumSelectionLength': '1',
+                                                                            'placeholder': 'Nat. Orçamentária...',
+                                                                            'fields': [
+                                                                                { 'field': 'CODNAT', 'label': 'Código', 'visable': 'false' },
+                                                                                { 'field': 'NOME', 'label': 'Nome', 'standard': 'true' },
+                                                                                { 'field': 'CAMPO_ZOOM', 'label': 'Coligada', 'standard': 'true' }
+                                                                            ]
                                                                         }">
                                                                     </td>
 
@@ -530,31 +686,59 @@
 
                                             <div id="collapseSubControladoria" class="panel-collapse collapse in">
                                                 <div class="panel-body">
-                                                    <!-- Linha 1: Checklist -->
+                                                    <!-- Linha 1: Checklist Dividido (Contábil e Fiscal) -->
                                                     <div class="row">
-                                                        <div class="form-group col-md-12">
-                                                            <label>Checklist Fiscal e Conformidade <span
-                                                                    class="text-danger">*</span></label>
+                                                        <!-- Coluna 1: Grupo Contábil (6/12) -->
+                                                        <div class="form-group col-md-6">
+                                                            <label style="color: #004578;">
+                                                                <span
+                                                                    class="fluigicon fluigicon-chart-bar icon-sm"></span>
+                                                                Grupo Contábil <span class="text-danger">*</span>
+                                                            </label>
                                                             <div class="checkbox">
-                                                                <label>
-                                                                    <input type="checkbox" name="checkRegime"
+                                                                <label><input type="checkbox" name="checkDRE"
+                                                                        id="checkDRE" value="sim"> Validação de DRE e
+                                                                    Balanço Patrimonial anexados</label>
+                                                            </div>
+                                                            <div class="checkbox">
+                                                                <label><input type="checkbox" name="checkReserva"
+                                                                        id="checkReserva" value="sim"> Confirmação de
+                                                                    saldos de reserva de lucros</label>
+                                                            </div>
+                                                            <div class="checkbox">
+                                                                <label><input type="checkbox" name="checkSaldo"
+                                                                        id="checkSaldo" value="sim"> Valor proposto não
+                                                                    excede o saldo disponível</label>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Coluna 2: Grupo Fiscal (6/12) -->
+                                                        <div class="form-group col-md-6">
+                                                            <label style="color: #004578;">
+                                                                <span
+                                                                    class="fluigicon fluigicon-document-files icon-sm"></span>
+                                                                Grupo Fiscal <span class="text-danger">*</span>
+                                                            </label>
+                                                            <div class="checkbox">
+                                                                <label><input type="checkbox" name="checkRegime"
                                                                         id="checkRegime" value="sim"> Regime confirmado
-                                                                    e período tributário encerrado
-                                                                </label>
+                                                                    e período tributário encerrado</label>
                                                             </div>
                                                             <div class="checkbox">
-                                                                <label>
-                                                                    <input type="checkbox" name="checkDctf"
+                                                                <label><input type="checkbox" name="checkDctf"
                                                                         id="checkDctf" value="sim"> DCTF transmitida e
-                                                                    quitada
-                                                                </label>
+                                                                    quitada</label>
                                                             </div>
                                                             <div class="checkbox">
-                                                                <label>
-                                                                    <input type="checkbox" name="checkLei9249"
-                                                                        id="checkLei9249" value="sim"> Conformidade com
-                                                                    Lei 9.249/95 (Isenção IRRF / Conformidade)
-                                                                </label>
+                                                                <label><input type="checkbox" name="checkLimite50k"
+                                                                        id="checkLimite50k" value="sim"> Cálculo do
+                                                                    limite isento (R$ 50.000) validado</label>
+                                                            </div>
+                                                            <div class="checkbox">
+                                                                <!-- Novo Checkbox da Lei 15.270/2025 substituindo a lei 9.249/95 -->
+                                                                <label><input type="checkbox" name="checkLei15270"
+                                                                        id="checkLei15270" value="sim"> Conformidade
+                                                                    Tributária (Lei 15.270/2025)</label>
                                                             </div>
                                                         </div>
                                                     </div>

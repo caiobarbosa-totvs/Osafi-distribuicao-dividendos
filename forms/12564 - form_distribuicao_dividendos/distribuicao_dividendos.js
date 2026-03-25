@@ -7,7 +7,7 @@ var ATIVIDADES = {
     SOLICITACAO_ATA: 12,
     ASSINATURA_ATA: 14,
     REJEICAO_FIM: 19,
-    INTEGRACAO_RM_TOTVS: 23,
+    INTEGRACAO_RM_TOTVS: 89,
     PROGRAMACAO_PAGAMENTOS: 25,
     VALIDACAO_PAGAMENTO: 27,
     CONCILIACAO_FINANCEIRA: 32,
@@ -65,18 +65,28 @@ var DistDividendos = {
         $('input[name="origemLucro"]').on('change', function () {
             var origemSelecionada = $(this).val();
 
-            if (origemSelecionada === 'anterior' || origemSelecionada === 'consolidacao') {
-            $('#panelAta').slideDown();
-        } else {
-            $('#panelAta').slideUp();
-        }
+            if (origemSelecionada === 'sem_deliberacao' || origemSelecionada === 'ja_deliberado' || origemSelecionada === 'consolidacao') {
+                $('#panelAta').slideDown();
+            } else {
+                $('#panelAta').slideUp();
+            }
 
-			// Gap C: Revela colunas financeiras de compensação apenas se for Consolidação
-             if (origemSelecionada === 'consolidacao') {
-            $('.col-consolidacao').show();
-        } else {
-            $('.col-consolidacao').hide();
-        }
+            // Revela o campo de Data da Ata apenas se for "Já Deliberado"
+            if (origemSelecionada === 'ja_deliberado') {
+                $('.col-ja-deliberado').slideDown();
+            } else {
+                $('.col-ja-deliberado').slideUp();
+                $('#dataAtaAnterior').val(''); // Limpa a data se o usuário desistir
+                $('#alertaRegraTransicao').removeClass('alert-success alert-warning').addClass('alert-info');
+                $('#alertaRegraTransicao').html('Selecione a data da Ata para verificar a regra de tributação.');
+            }
+
+            //  Revela colunas financeiras de compensação apenas se for Consolidação
+            if (origemSelecionada === 'consolidacao') {
+                $('.col-consolidacao').show();
+            } else {
+                $('.col-consolidacao').hide();
+            }
 
 
             // Limpa o campo Zoom de Centro de Custos automaticamente
@@ -124,17 +134,17 @@ var DistDividendos = {
             DistDividendos.calcularValores();
         });
 
-         // --- EVENTO 4: Cálculo da Compensação de Antecipações  ---
+        // --- EVENTO 4: Cálculo da Compensação de Antecipações  ---
         $('#tabela_pagamentos').on('blur', "input[id^='pagValorAntecipado___']", function () {
             var linha = $(this).attr('id').split('___')[1];
-            
+
             // Pega o Bruto (vamos supor que você copiou o valor do rateio para cá via integração ou manual)
             var bruto = DistDividendos.getFloatValue($("#pagValorBruto___" + linha).val());
             var antecipado = DistDividendos.getFloatValue($(this).val());
-            
+
             // A mágica matemática
             var saldoPagar = bruto - antecipado;
-            
+
             // Preenche o readonly com formatação monetária
             $("#pagSaldoPagar___" + linha).val(DistDividendos.getMoneyString(saldoPagar));
         });
@@ -150,28 +160,28 @@ var DistDividendos = {
 
         // Mapeamento das atividades do Workflow (BPMN) para os steps do HTML
         if (atividade == ATIVIDADES.INICIO || atividade == ATIVIDADES.INICIALIZACAO || atividade == ATIVIDADES.PLANEJAMENTO_FINANCEIRO) {
-            stepAtual = 1; 
-            
+            stepAtual = 1;
+
         } else if (atividade == ATIVIDADES.APROVACAO_CONSELHO) {
-            stepAtual = 3; 
+            stepAtual = 3;
             // Esconde a aba da Controladoria, pois o Diretor não interage com ela
             $('a[href="#tab_controladoria"]').parent().hide();
-            
+
         } else if (atividade == ATIVIDADES.AVALIACAO_TECNICA) {
-            stepAtual = 4; 
+            stepAtual = 4;
             //  Abre o formulário já focando automaticamente na aba da Controladoria
             $('a[href="#tab_controladoria"]').tab('show');
-            
+
         } else if (atividade == ATIVIDADES.SOLICITACAO_ATA || atividade == ATIVIDADES.ASSINATURA_ATA) {
-            stepAtual = 5; 
+            stepAtual = 5;
             $('a[href="#tab_controladoria"]').parent().show();
-            
+
             // Força a exibição do Painel da Ata
-            $('#panelAta').show(); 
-            
+            $('#panelAta').show();
+
             // Esconde completamente a aba Financeira de quem faz a Ata
-            $('a[href="#tab_financeiro"]').parent().hide(); 
-            
+            $('a[href="#tab_financeiro"]').parent().hide();
+
         } else if (
             // Todas as atividades pertinentes à Execução Financeira
             atividade == ATIVIDADES.PROGRAMACAO_PAGAMENTOS ||
@@ -183,30 +193,30 @@ var DistDividendos = {
             atividade == ATIVIDADES.CONCILIACAO_FINANCEIRA_REGULAR ||
             atividade == ATIVIDADES.CONCILIACAO_CONTABIL
         ) {
-            stepAtual = 6; 
+            stepAtual = 6;
             $('a[href="#tab_controladoria"]').parent().show();
             $('#panelAta').show(); // Mantém a Ata visível para o financeiro consultar
-            
+
             // Revela e Foca na aba Financeira
             $('a[href="#tab_financeiro"]').parent().show();
             $('a[href="#tab_financeiro"]').tab('show');
-            
+
         } else if (atividade == ATIVIDADES.FIM || atividade == ATIVIDADES.REJEICAO_FIM) {
-            stepAtual = 7; 
-			 $('#panelAta').show();
+            stepAtual = 7;
+            $('#panelAta').show();
         }
 
-		if (atividade == ATIVIDADES.CONCILIACAO_CONTABIL) {
+        if (atividade == ATIVIDADES.CONCILIACAO_CONTABIL) {
             $('#divEncerramentoContabil').show();
         }
-	
-		// Oculta botão e lixeira de SÓCIOS se não for o Planejamento Inicial
+
+        // Oculta botão e lixeira de SÓCIOS se não for o Planejamento Inicial
         if (atividade != ATIVIDADES.INICIO && atividade != ATIVIDADES.INICIALIZACAO && atividade != ATIVIDADES.PLANEJAMENTO_FINANCEIRO) {
-            $('button[onclick="wdkAddChild(\'tabela_socios\')"]').hide(); 
+            $('button[onclick="wdkAddChild(\'tabela_socios\')"]').hide();
             $("<style type='text/css'> #tabela_socios .fluigicon-trash { display: none !important; cursor: default; } </style>").appendTo("head");
         }
 
-		
+
 
         // Oculta botão e lixeira de PAGAMENTOS se a etapa NÃO PERTENCER ao Financeiro
         var etapasFinanceiro = [
@@ -214,17 +224,17 @@ var DistDividendos = {
             ATIVIDADES.ANEXACAO_COMPROVANTE, ATIVIDADES.PROVISOES_FINANCEIRAS, ATIVIDADES.PROGRAMACAO_PAGAMENTO_REGULAR,
             ATIVIDADES.CONCILIACAO_FINANCEIRA_REGULAR, ATIVIDADES.CONCILIACAO_CONTABIL
         ];
-        
+
         // Se a etapa atual não estiver dentro do array do Financeiro, oculta as ações da tabela deles
         if (etapasFinanceiro.indexOf(atividade) === -1) {
-            $('button[onclick="wdkAddChild(\'tabela_pagamentos\')"]').hide(); 
+            $('button[onclick="wdkAddChild(\'tabela_pagamentos\')"]').hide();
             $("<style type='text/css'> #tabela_pagamentos .fluigicon-trash { display: none !important; cursor: default; } </style>").appendTo("head");
         }
 
         // Acende a barra de progresso com base no step identificado
         this.atualizarTimeline(stepAtual);
 
-		
+
     },
 
     // Função auxiliar para manipular o CSS da barra de progresso
@@ -298,14 +308,14 @@ var DistDividendos = {
         // O cálculo financeiro agora usa estritamente o Percentual de DISTRIBUIÇÃO
         $("input[id^='percDistSocio___']").each(function () {
             // Extração segura do índice da linha
-            var linha = $(this).attr('id').split('___')[1]; 
+            var linha = $(this).attr('id').split('___')[1];
             var percentualDist = self.getFloatValue($(this).val());
 
             if (percentualDist > 0 && valorProposto > 0) {
                 // Calcula o valor a receber deste sócio e injeta na tela (readonly)
                 var valorReceber = valorProposto * (percentualDist / 100);
                 $("#valorSocio___" + linha).val(self.getMoneyString(valorReceber));
-                
+
                 somaParticipacao += percentualDist;
             } else {
                 $("#valorSocio___" + linha).val('');
@@ -343,8 +353,8 @@ function setSelectedZoomItem(selectedItem) {
         // Ao selecionar a Empresa/Filial, recarrega o zoom de Centro de Custos.
         reloadZoomFilterValues("centroCusto", "CODCOLIGADA," + selectedItem.CODCOLIGADA);
     }
-	
-	if (inputId == "nomeSocio") {
+
+    if (inputId == "nomeSocio") {
         // Ao selecionar a Empresa/Filial, recarrega o zoom de Centro de Custos.
         reloadZoomFilterValues("centroCusto", "CODCOLIGADA," + selectedItem.CODCOLIGADA);
     }
@@ -402,7 +412,7 @@ function removedZoomItem(removedItem) {
         $("#percCapitalSocio___" + linha).val('');
         $("#percDistSocio___" + linha).val('');
         $("#valorSocio___" + linha).val('');
-        
+
         // Limpa o Zoom de Centro de Custo daquela linha, se existir
         if (window["centroCustoSocio___" + linha]) {
             window["centroCustoSocio___" + linha].clear();

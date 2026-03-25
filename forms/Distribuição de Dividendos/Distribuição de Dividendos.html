@@ -1,0 +1,985 @@
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Distribuição de Dividendos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Imports Obrigatórios Fluig Style Guide -->
+    <link rel="stylesheet" type="text/css" href="/style-guide/css/fluig-style-guide-flat.min.css">
+    <script src="/portal/resources/js/jquery/jquery.js"></script>
+    <script src="/portal/resources/js/jquery/jquery-ui.min.js"></script>
+    <script src="/portal/resources/js/mustache/mustache-min.js"></script>
+    <script src="/style-guide/js/fluig-style-guide.min.js"></script>
+    <script type="text/javascript" src="/webdesk/vcXMLRPC.js"></script>
+
+    <!-- Arquivos Customizados (Criaremos nas próximas etapas) -->
+    <link rel="stylesheet" type="text/css" href="custom.css">
+</head>
+
+<body class="content-form">
+    <!-- Todo o formulário deve estar dentro desta div -->
+    <div class="fluig-style-guide">
+        <form name="form" role="form">
+
+            <!-- Campos Ocultos (Hidden) para Controle de Estado, Integrações e Workflow -->
+            <input type="hidden" id="atividadeAtual" name="atividadeAtual" value="">
+            <input type="hidden" id="modoFormulario" name="modoFormulario" value="">
+            <input type="hidden" id="statusIntegracaoRM" name="statusIntegracaoRM" value="">
+            <input type="hidden" id="statusDiretoria" name="statusDiretoria" value="">
+            <input type="hidden" id="statusControladoria" name="statusControladoria" value="">
+            <!-- <input type="hidden" id="statusAssinaturaAta" name="statusAssinaturaAta" value=""> -->
+            <input type="hidden" id="possuiSaldoRemanescente" name="possuiSaldoRemanescente" value="">
+            <input type="hidden" id="statusGeralPagamento" name="statusGeralPagamento" value="NAO">
+
+
+
+            <div class="container-fluid">
+                <h2 class="page-header">Distribuição de Dividendos</h2>
+
+                <!-- Componente Timeline -->
+                <div class="barraProgresso-wrapper">
+                    <div class="barraProgresso-container">
+                        <div class="barraProgresso"></div>
+
+                        <div id="step-inicio" class="barraProgresso-step active" data-step="0">
+                            <div class="title">Início</div>
+                        </div>
+
+                        <div id="step-planejamento" class="barraProgresso-step" data-step="1">
+                            <div class="title">Planejamento Financeiro</div>
+                        </div>
+
+                        <div id="step-distribuicao" class="barraProgresso-step" data-step="2">
+                            <div class="title">Distribuição por Sócio</div>
+                        </div>
+
+                        <div id="step-av-controladoria" class="barraProgresso-step" data-step="3">
+                            <div class="title">Avaliação Técnica - Controladoria</div>
+                        </div>
+
+                        <div id="step-aprovacao-dir" class="barraProgresso-step" data-step="4">
+                            <div class="title">Aprovação da Diretoria</div>
+                        </div>
+
+                        <div id="step-solicitacao-ata" class="barraProgresso-step" data-step="5">
+                            <div class="title">Solicitação e Geração de Ata</div>
+                        </div>
+
+                        <div id="step-execucao" class="barraProgresso-step" data-step="6">
+                            <div class="title">Execução Financeira e Pagamento</div>
+                        </div>
+
+                        <div id="step-fim" class="barraProgresso-step" data-step="7">
+                            <div class="title">Fim</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Fim - Componente Timeline -->
+
+                <!-- Container Acordeão Principal -->
+                <div class="panel-group" id="accordion">
+
+                    <!-- ======================================================= -->
+                    <!-- 1. PAINEL PRINCIPAL: ESTRUTURAÇÃO (COLAPSÁVEL E WARNING)-->
+                    <!-- ======================================================= -->
+                    <div class="panel panel-warning" id="panelEstruturacao">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <!-- 1. Comportamento Accordion/Sanfona aplicado -->
+                                <a class="collapse-icon up" data-toggle="collapse" data-parent="#accordion"
+                                    href="#collapseOne">
+                                    <span class="fluigicon fluigicon-money-circle fluigicon-md"></span> Estruturação dos
+                                    Dividendos
+                                </a>
+                            </h3>
+                        </div>
+
+                        <div id="collapseOne" class="panel-collapse collapse in">
+                            <div class="panel-body">
+
+                                <!-- 2. Navegação Interna por Abas (Tabs) -->
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="active"><a href="#tab_planejamento" role="tab"
+                                            data-toggle="tab">Planejamento
+                                            Financeiro</a></li>
+                                    <li><a href="#tab_socios" role="tab" data-toggle="tab">Distribuição por Sócio</a>
+                                    </li>
+                                </ul>
+
+                                <div class="tab-content">
+
+                                    <!-- CONTEÚDO DA ABA 1: Planejamento Financeiro -->
+                                    <div class="tab-pane fade in active" id="tab_planejamento">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <div class="panel panel-warning" id="subPanelTributario">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubTributario"><span
+                                                            class="fluigicon fluigicon-file fluigicon-md"></span>
+                                                        Dados Tributários e Origem
+                                                    </a>
+                                                </h3>
+                                            </div>
+
+                                            <div id="collapseSubTributario" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <!-- Linha 1: Ano e Regime -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label for="anoReferencia">Ano de Referência <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="number" class="form-control"
+                                                                name="anoReferencia" id="anoReferencia"
+                                                                placeholder="Ex: 2025">
+                                                        </div>
+
+                                                        <div class="form-group col-md-4">
+                                                            <label for="regimeTributario">Regime Tributário <span
+                                                                    class="text-danger">*</span></label>
+                                                            <select class="form-control" name="regimeTributario"
+                                                                id="regimeTributario">
+                                                                <option value="">Selecione...</option>
+                                                                <option value="Lucro Presumido">Lucro Presumido</option>
+                                                                <option value="Lucro Real">Lucro Real</option>
+                                                                <option value="Simples Nacional">Simples Nacional
+                                                                </option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="form-group col-md-4">
+                                                            <label for="formaDistribuicao">Forma de Distribuição <span
+                                                                    class="text-danger">*</span></label>
+                                                            <select class="form-control" name="formaDistribuicao"
+                                                                id="formaDistribuicao">
+                                                                <option value="">Selecione...</option>
+                                                                <option value="Proporcional">Proporcional</option>
+                                                                <option value="Desproporcional">Desproporcional</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Linha 2: Receita e Base -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-6">
+                                                            <label for="receitaBruta">Receita Bruta do Período (R$)
+                                                                <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control money"
+                                                                name="receitaBruta" id="receitaBruta"
+                                                                placeholder="0,00">
+                                                        </div>
+                                                        <div class="form-group col-md-6">
+                                                            <label for="basePresumida">Base de Cálculo Presumida (%)
+                                                                <span class="text-danger">*</span></label>
+                                                            <input type="number" class="form-control"
+                                                                name="basePresumida" id="basePresumida"
+                                                                placeholder="Ex: 32">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Linha 2.1: Detalhamento de Impostos e Limite Isento -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-2">
+                                                            <label for="valorIrpj">(-) IRPJ (15%)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="valorIrpj" id="valorIrpj" readonly
+                                                                placeholder="0,00">
+                                                        </div>
+                                                        <div class="form-group col-md-2">
+                                                            <label for="valorCsll">(-) CSLL (9%)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="valorCsll" id="valorCsll" readonly
+                                                                placeholder="0,00">
+                                                        </div>
+                                                        <div class="form-group col-md-2">
+                                                            <label for="valorPis">(-) PIS (0,65%)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="valorPis" id="valorPis" readonly
+                                                                placeholder="0,00">
+                                                        </div>
+                                                        <div class="form-group col-md-2">
+                                                            <label for="valorCofins">(-) COFINS (3%)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="valorCofins" id="valorCofins" readonly
+                                                                placeholder="0,00">
+                                                        </div>
+                                                        <div class="form-group col-md-2">
+                                                            <label for="valorRet">(-) RET (3%)</label>
+                                                            <input type="text" class="form-control money"
+                                                                name="valorRet" id="valorRet" readonly
+                                                                placeholder="0,00">
+                                                        </div>
+                                                        <div class="form-group col-md-2">
+                                                            <label for="limiteIsento"
+                                                                style="color: #004578;"><strong>(=)
+                                                                    Limite
+                                                                    Isento</strong></label>
+                                                            <input type="text" class="form-control money"
+                                                                name="limiteIsento" id="limiteIsento" readonly
+                                                                placeholder="0,00"
+                                                                style="font-weight: bold; color: #004578;">
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+
+                                                    <!-- Linha 3: Origem do Lucro -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-6">
+                                                            <label>Origem do Lucro <span
+                                                                    class="text-danger">*</span></label>
+                                                            <div class="radio">
+                                                                <label><input type="radio" name="origemLucro"
+                                                                        id="origemCorrente" value="corrente"> Lucro do
+                                                                    Período Corrente (Antecipação)</label>
+                                                            </div>
+                                                            <div class="radio">
+                                                                <label><input type="radio" name="origemLucro"
+                                                                        id="origemAnterior" value="anterior"> Lucro de
+                                                                    Exercícios Anteriores</label>
+                                                            </div>
+                                                            <div class="radio">
+                                                                <label><input type="radio" name="origemLucro"
+                                                                        id="origemConsolidacao" value="consolidacao">
+                                                                    Consolidação de Antecipações (Fechamento do
+                                                                    Exercício)</label>
+                                                            </div>
+
+                                                        </div>
+                                                        <div class="row col-consolidacao" style="display:none;">
+                                                            <div class="form-group col-md-12">
+                                                                <label for="solicitacoesVinculadas"
+                                                                    style="color: #004578;">
+                                                                    <span
+                                                                        class="fluigicon fluigicon-link icon-sm"></span>
+                                                                    Solicitações de Antecipação Vinculadas (Ref. Fluig)
+                                                                    <span class="text-danger">*</span>
+                                                                </label>
+                                                                <input type="text" class="form-control"
+                                                                    name="solicitacoesVinculadas"
+                                                                    id="solicitacoesVinculadas"
+                                                                    placeholder="Ex: 1024, 1058, 1102 (Separe por vírgula)">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Linha 4: Valor Proposto -->
+                                                    <div class="row">
+
+                                                        <!-- Coluna 1: Valor Proposto (4/12) -->
+                                                        <div class="form-group col-md-4">
+                                                            <label for="valorProposto">Valor Proposto para Distribuição
+                                                                (R$) <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control money"
+                                                                name="valorProposto" id="valorProposto"
+                                                                placeholder="0,00">
+                                                            <span id="alertaLimite" class="text-danger"
+                                                                style="display:none;">
+                                                                <strong>⚠ Excede Limite Isento</strong>
+                                                            </span>
+                                                        </div>
+
+                                                        <!-- Coluna 2: NOVO CAMPO Empresa/Filial (4/12) -->
+                                                        <div class="form-group col-md-4">
+                                                            <label for="empresaFilial">Empresa/Filial <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="zoom" class="form-control" name="empresaFilial"
+                                                                id="empresaFilial" data-zoom="{
+                                                                'displayKey': 'NOME',
+                                                                'datasetId': 'ds_dividendos_rm_filial',
+                                                                'maximumSelectionLength': '1',
+                                                                'placeholder': 'Selecione a Filial...',
+                                                                'fields': [
+                                                                    { 'field': 'CODCOLIGADA', 'label': 'Código' },
+                                                                    { 'field': 'NOME', 'label': 'Razão Social', 'standard': 'true' },
+                                                                    { 'field': 'CNPJ', 'label': 'CNPJ' }
+                                                                ]
+                                                            }">
+                                                        </div>
+
+                                                        <!-- Coluna 3: Centro de Custos (4/12) -->
+                                                        <div class="form-group col-md-4">
+                                                            <label for="centroCusto">Centro de Custos <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="zoom" class="form-control" name="centroCusto"
+                                                                id="centroCusto" data-zoom="{
+                                                                'displayKey': 'NOME',
+                                                                'datasetId': 'ds_dividendos_rm_centro_custo',
+                                                                'maximumSelectionLength': '1',
+                                                                'placeholder': 'Selecione o Centro de Custo...',
+                                                                'fields': [
+                                                                    { 'field': 'CODCCUSTO', 'label': 'Código' },
+                                                                    { 'field': 'NOME', 'label': 'Nome', 'standard': 'true' }
+                                                                ]
+                                                            }">
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> <!-- Fim Sub-painel -->
+                                    </div> <!-- Fim Aba Planejamento -->
+
+                                    <!-- CONTEÚDO DA ABA 2: Distribuição por Sócio -->
+                                    <div class="tab-pane fade" id="tab_socios">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <div class="panel panel-primary" id="subPanelSocios">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubSocios">
+                                                        <span class="fluigicon fluigicon-users fluigicon-md"></span>
+                                                        Tabela de Rateio
+                                                    </a>
+                                                </h3>
+                                            </div>
+
+                                            <div id="collapseSubSocios" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered table-striped"
+                                                            tablename="tabela_socios" id="tabela_socios"
+                                                            noaddbutton="true">
+                                                            <!-- CABEÇALHO DA TABELA -->
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style="min-width: 250px;">Nome / Razão Social
+                                                                        <span class="text-danger">*</span>
+                                                                    </th>
+                                                                    <th style="min-width: 150px;">CPF / CNPJ</th>
+                                                                    <th style="min-width: 250px;">Centro de Custo
+                                                                        (Rateio) <span class="text-danger">*</span></th>
+                                                                    <th style="min-width: 120px;">% Capital</th>
+                                                                    <th style="min-width: 120px;">% Dist. <span
+                                                                            class="text-danger">*</span></th>
+                                                                    <th style="min-width: 150px;">Valor a Receber (R$)
+                                                                    </th>
+                                                                    <th style="min-width: 150px;">Banco <span
+                                                                            class="text-danger">*</span></th>
+                                                                    <th style="min-width: 100px;">Agência <span
+                                                                            class="text-danger">*</span></th>
+                                                                    <th style="min-width: 120px;">Conta <span
+                                                                            class="text-danger">*</span></th>
+                                                                </tr>
+                                                            </thead>
+
+                                                            <!-- CORPO DA TABELA (Campos Filho) -->
+                                                            <tbody>
+                                                                <tr>
+                                                                    <!-- 1. Zoom do Sócio -->
+                                                                    <td>
+                                                                        <input type="zoom" class="form-control"
+                                                                            name="nomeSocio" id="nomeSocio" data-zoom="{
+                                                                            'displayKey': 'NOME_SOCIO',
+                                                                            'datasetId': 'ds_dividendos_rm_socio',
+                                                                            'maximumSelectionLength': '1',
+                                                                            'placeholder': 'Buscar Sócio...',
+                                                                            'fields': [
+                                                                                { 'field': 'CPF_CNPJ', 'label': 'CPF/CNPJ' },
+                                                                                { 'field': 'NOME_SOCIO', 'label': 'Sócio', 'standard': 'true' }
+                                                                            ]
+                                                                        }">
+                                                                        <input type="hidden" name="flagColigada"
+                                                                            id="flagColigada" value="NAO">
+                                                                        <span id="alertaColigada"
+                                                                            class="label label-warning"
+                                                                            style="display:none; margin-top: 5px;">
+                                                                            ⚠ Sócio é Coligada - Integração Dupla
+                                                                            Necessária
+                                                                        </span>
+
+                                                                    </td>
+
+                                                                    <!-- 2. CPF/CNPJ (Preenchido via JS - Somente Leitura) -->
+                                                                    <td><input type="text" class="form-control"
+                                                                            name="cpfCnpjSocio" id="cpfCnpjSocio"
+                                                                            readonly>
+                                                                    </td>
+
+                                                                    <!-- 3. Novo Zoom: Centro de Custo Específico da Linha -->
+                                                                    <td>
+                                                                        <input type="zoom" class="form-control"
+                                                                            name="centroCustoSocio"
+                                                                            id="centroCustoSocio" data-zoom="{
+                                                                            'displayKey': 'CAMPO_ZOOM',
+                                                                            'datasetId': 'ds_dividendos_rm_centro_custo',
+                                                                            'maximumSelectionLength': '1',
+                                                                            'placeholder': 'C. Custo...',
+                                                                            'fields': [
+                                                                                { 'field': 'CODCCUSTO', 'label': 'Código', 'visable': 'false' },
+                                                                                { 'field': 'NOME', 'label': 'Nome', 'visable': 'false'},
+                                                                                { 'field': 'CAMPO_ZOOM', 'label': 'Coligada', 'standard': 'true' }                                                                            ]
+                                                                        }">
+                                                                    </td>
+
+                                                                    <!-- 4. Novo Campo: Percentual de Capital -->
+                                                                    <td><input type="text" class="form-control percent"
+                                                                            name="percCapitalSocio"
+                                                                            id="percCapitalSocio" placeholder="0,00">
+                                                                    </td>
+
+                                                                    <!-- 5. Novo Campo: Percentual de Distribuição (A Base do Cálculo) -->
+                                                                    <td><input type="text" class="form-control percent"
+                                                                            name="percDistSocio" id="percDistSocio"
+                                                                            placeholder="0,00"></td>
+
+                                                                    <!-- 6. Valor Calculado (Somente Leitura para evitar quebra matemática) -->
+                                                                    <td><input type="text" class="form-control money"
+                                                                            name="valorSocio" id="valorSocio" readonly>
+                                                                    </td>
+
+                                                                    <!-- 7, 8 e 9. Dados Bancários Separados (Preenchidos via JS) -->
+                                                                    <td><input type="text" class="form-control"
+                                                                            name="bancoSocio" id="bancoSocio"
+                                                                            placeholder="Ex: Itaú"></td>
+                                                                    <td><input type="text" class="form-control"
+                                                                            name="agenciaSocio" id="agenciaSocio"
+                                                                            placeholder="0000"></td>
+                                                                    <td><input type="text" class="form-control"
+                                                                            name="contaSocio" id="contaSocio"
+                                                                            placeholder="00000-0"></td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div style="display: flex; align-items: center;">
+                                                            <button type="button" class="botaoAdicionar"
+                                                                onclick="wdkAddChild('tabela_socios')">
+                                                                <span class="simboloBotao">+</span>
+                                                            </button>
+                                                            <span
+                                                                style="margin-left: 10px; font-weight: bold; color: #004578;">Adicionar
+                                                                Sócio</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> <!-- Fim Sub-painel Sócios -->
+                                    </div> <!-- Fim Aba Sócios -->
+
+                                </div> <!-- Fim Tab-Content -->
+                            </div>
+                        </div>
+                    </div> <!-- Fim Painel Principal 1 -->
+
+                    <!-- ======================================================= -->
+                    <!-- 2. PAINEL PRINCIPAL: AVALIAÇÕES (COLAPSÁVEL E WARNING)  -->
+                    <!-- ======================================================= -->
+                    <div class="panel panel-warning" id="panelAvaliacoes">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <!-- 1. Comportamento Accordion/Sanfona aplicado -->
+                                <a class="collapse-icon up" data-toggle="collapse" data-parent="#accordion"
+                                    href="#collapseTwo">
+                                    <span class="fluigicon fluigicon-handshake fluigicon-md"></span> Avaliações e
+                                    Aprovações
+                                </a>
+                            </h3>
+                        </div>
+
+                        <div id="collapseTwo" class="panel-collapse collapse in">
+                            <div class="panel-body">
+
+                                <!-- 2. Navegação Interna por Abas (Tabs) -->
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="active"><a href="#tab_diretoria" role="tab" data-toggle="tab">Aprovação
+                                            da Diretoria</a></li>
+                                    <li><a href="#tab_controladoria" role="tab" data-toggle="tab">Avaliação Técnica -
+                                            Controladoria</a></li>
+                                </ul>
+
+                                <div class="tab-content">
+
+                                    <!-- CONTEÚDO DA ABA 1: Diretoria (Antigo Painel 3) -->
+                                    <div class="tab-pane fade in active" id="tab_diretoria">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <div class="panel panel-warning" id="subPanelDiretoria">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubDiretoria"><span
+                                                            class="fluigicon fluigicon-user-comment fluigicon-md"></span>
+                                                        Parecer e Decisão
+                                                    </a>
+                                                </h3>
+                                            </div>
+
+                                            <div id="collapseSubDiretoria" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <!-- Linha 1: Decisão e Motivo de Rejeição -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label>Decisão da Diretoria <span
+                                                                    class="text-danger">*</span></label>
+                                                            <div class="radio">
+                                                                <label>
+                                                                    <input type="radio" name="decisaoDiretoria"
+                                                                        id="dirAprovar" value="Aprovar"> Aprovar
+                                                                    Proposta
+                                                                </label>
+                                                            </div>
+                                                            <div class="radio">
+                                                                <label>
+                                                                    <input type="radio" name="decisaoDiretoria"
+                                                                        id="dirRejeitar" value="Rejeitar"> Rejeitar
+                                                                    Proposta
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="form-group col-md-8" id="divMotivoRejeicao"
+                                                            style="display: none;">
+                                                            <label for="motivoRejeicaoDir">Motivo da Rejeição <span
+                                                                    class="text-danger">*</span></label>
+                                                            <select class="form-control" name="motivoRejeicaoDir"
+                                                                id="motivoRejeicaoDir">
+                                                                <option value="">Selecione o motivo...</option>
+                                                                <option value="Fluxo de caixa insuficiente">Fluxo de
+                                                                    caixa insuficiente</option>
+                                                                <option value="Resultado não confirmado">Resultado não
+                                                                    confirmado</option>
+                                                                <option value="Não alinhado com estratégia">Não alinhado
+                                                                    com estratégia</option>
+                                                                <option value="Outro">Outro (Especificar nas
+                                                                    observações)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Linha 2: Observações -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-12">
+                                                            <label for="obsDiretoria">Observações da Diretoria</label>
+                                                            <textarea class="form-control" name="obsDiretoria"
+                                                                id="obsDiretoria" rows="3"
+                                                                placeholder="Digite considerações adicionais..."></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> <!-- Fim Sub-painel Diretoria -->
+                                    </div> <!-- Fim Aba Diretoria -->
+
+                                    <!-- CONTEÚDO DA ABA 2: Controladoria (Antigo Painel 4) -->
+                                    <div class="tab-pane fade" id="tab_controladoria">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <div class="panel panel-success" id="subPanelControladoria">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubControladoria"><i
+                                                            class="glyphicon glyphicon-check"></i>
+                                                        Checklist e Conformidade Fiscal
+                                                    </a>
+                                                </h3>
+                                            </div>
+
+                                            <div id="collapseSubControladoria" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <!-- Linha 1: Checklist -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-12">
+                                                            <label>Checklist Fiscal e Conformidade <span
+                                                                    class="text-danger">*</span></label>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox" name="checkRegime"
+                                                                        id="checkRegime" value="sim"> Regime confirmado
+                                                                    e período tributário encerrado
+                                                                </label>
+                                                            </div>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox" name="checkDctf"
+                                                                        id="checkDctf" value="sim"> DCTF transmitida e
+                                                                    quitada
+                                                                </label>
+                                                            </div>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox" name="checkLei9249"
+                                                                        id="checkLei9249" value="sim"> Conformidade com
+                                                                    Lei 9.249/95 (Isenção IRRF / Conformidade)
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+
+                                                    <!-- Linha 2: Decisão e Parecer -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label for="decisaoControladoria">Decisão da
+                                                                Controladoria <span class="text-danger">*</span></label>
+                                                            <select class="form-control" name="decisaoControladoria"
+                                                                id="decisaoControladoria">
+                                                                <option value="">Selecione...</option>
+                                                                <option value="Aprovar">Aprovar (Cálculos corretos e
+                                                                    conformes)</option>
+                                                                <option value="Aprovar com Ressalvas">Aprovar com
+                                                                    Ressalvas</option>
+                                                                <option value="Rejeitar">Rejeitar (Retornar ou Cancelar)
+                                                                </option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-group col-md-8">
+                                                            <label for="parecerControladoria">Parecer da Controladoria /
+                                                                Recomendações <span class="text-danger">*</span></label>
+                                                            <textarea class="form-control" name="parecerControladoria"
+                                                                id="parecerControladoria" rows="3"
+                                                                placeholder="Digite o parecer técnico, recomendações ou ressalvas..."></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div> <!-- Fim Sub-painel Controladoria -->
+                                    </div> <!-- Fim Aba Controladoria -->
+
+                                </div> <!-- Fim Tab-Content -->
+                            </div>
+                        </div>
+                    </div> <!-- Fim Painel Principal 2 -->
+
+                    <!-- ======================================================= -->
+                    <!-- 3. PAINEL PRINCIPAL: ATA E EXECUÇÃO (COLAPSÁVEL E WARNING) -->
+                    <!-- ======================================================= -->
+                    <div class="panel panel-warning" id="panelConclusao">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">
+                                <!-- 1. Comportamento Accordion/Sanfona aplicado -->
+                                <a class="collapse-icon up" data-toggle="collapse" data-parent="#accordion"
+                                    href="#collapseThree">
+                                    <span class="fluigicon fluigicon-file fluigicon-md"></span> Ata e Execução
+                                    Financeira
+                                </a>
+                            </h3>
+                        </div>
+
+                        <div id="collapseThree" class="panel-collapse collapse in">
+                            <div class="panel-body">
+
+                                <!-- 2. Navegação Interna por Abas (Tabs) -->
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="active"><a href="#tab_ata" role="tab" data-toggle="tab">Solicitação e
+                                            Geração de Ata</a></li>
+                                    <li><a href="#tab_financeiro" role="tab" data-toggle="tab">Execução Financeira e
+                                            Pagamento</a></li>
+                                </ul>
+
+                                <div class="tab-content">
+
+                                    <!-- CONTEÚDO DA ABA 1: Ata (Antigo Painel 5) -->
+                                    <div class="tab-pane fade in active" id="tab_ata">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <!-- Mantido o ID original 'panelAta' e o style='display:none' para não quebrar regras de negócio do seu JS -->
+                                        <div class="panel panel-primary" id="panelAta" style="display: none;">
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubAta"><span
+                                                            class="fluigicon fluigicon-calendar fluigicon-md"></span>
+                                                        Dados da Ata e Justificativa
+                                                    </a>
+                                                </h3>
+
+                                            </div>
+
+                                            <div id="collapseSubAta" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <!-- Linha 1: Dados Gerais da Ata -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label for="dataAta">Data da Ata <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="date" class="form-control" name="dataAta"
+                                                                id="dataAta">
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="localAta">Local <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control" name="localAta"
+                                                                id="localAta" placeholder="Ex: Sede da Empresa">
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="horarioAta">Horário <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="time" class="form-control" name="horarioAta"
+                                                                id="horarioAta">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Linha 2: Dados do Exercício -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-3">
+                                                            <label for="periodoReferenciaAta">Período de Referência
+                                                                (De/Até) <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control"
+                                                                name="periodoReferenciaAta" id="periodoReferenciaAta"
+                                                                placeholder="Ex: 01/01/2024 a 31/12/2024">
+                                                        </div>
+
+                                                        <div class="form-group col-md-3">
+                                                            <label for="resultadoLiquido">Resultado Líquido do Exercício
+                                                                (R$) <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control money"
+                                                                name="resultadoLiquido" id="resultadoLiquido"
+                                                                placeholder="0,00">
+                                                        </div>
+
+                                                        <div class="form-group col-md-3">
+                                                            <label for="lucrosAcumulados">Lucros Acumulados Anteriores
+                                                                (R$) <span class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control money"
+                                                                name="lucrosAcumulados" id="lucrosAcumulados"
+                                                                placeholder="0,00">
+                                                        </div>
+
+                                                        <div class="form-group col-md-3">
+                                                            <label for="totalDisponivel"
+                                                                style="color: #004578;"><strong>Total Disponível
+                                                                    (R$)</strong> <span
+                                                                    class="text-danger">*</span></label>
+                                                            <input type="text" class="form-control money"
+                                                                name="totalDisponivel" id="totalDisponivel"
+                                                                placeholder="0,00"
+                                                                style="font-weight: bold; color: #004578;">
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+
+                                                    <!-- Linha 3: Assinantes e Justificativa -->
+                                                    <div class="row">
+                                                        <div class="form-group col-md-4">
+                                                            <label>Assinantes (Integração Qualysign) <span
+                                                                    class="text-danger">*</span></label>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox"
+                                                                        name="assinaturaRepresentante"
+                                                                        id="assinaturaRepresentante" value="sim">
+                                                                    Representante Legal <span
+                                                                        class="text-danger">*</span>
+                                                                </label>
+                                                            </div>
+                                                            <div class="checkbox">
+                                                                <label>
+                                                                    <input type="checkbox" name="assinaturaFinanceiro"
+                                                                        id="assinaturaFinanceiro" value="sim"> Gerente
+                                                                    Financeiro (Opcional)
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <div class="form-group col-md-8">
+                                                            <label for="justificativaAta">Justificativa da Distribuição
+                                                                e Impacto Financeiro <span
+                                                                    class="text-danger">*</span></label>
+                                                            <textarea class="form-control" name="justificativaAta"
+                                                                id="justificativaAta" rows="3"
+                                                                placeholder="Detalhes para constar no documento legal..."></textarea>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            <hr>
+                                                        </div>
+                                                        <div class="form-group col-md-4">
+                                                            <label for="statusAssinaturaAta"
+                                                                style="color: #8a6d3b;">Mock
+                                                                API Qualysign (Teste) <span
+                                                                    class="text-danger">*</span></label>
+                                                            <select class="form-control" name="statusAssinaturaAta"
+                                                                id="statusAssinaturaAta">
+                                                                <option value="">Aguardando Assinaturas...</option>
+                                                                <option value="ASSINADO">Simulação: Todos Assinaram
+                                                                    (Avançar para Financeiro)</option>
+                                                                <option value="REJEITADO">Simulação: Alguém Rejeitou
+                                                                    (Voltar para Correção)</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div> <!-- Fim Sub-painel Ata -->
+                                    </div> <!-- Fim Aba Ata -->
+
+                                    <!-- CONTEÚDO DA ABA 2: Execução Financeira (Antigo Painel 6) -->
+                                    <div class="tab-pane fade" id="tab_financeiro">
+                                        <br>
+                                        <!-- 3 e 4. Aninhamento de Painéis e Cores (Sub-painel Success) -->
+                                        <!-- Mantido o ID original 'panelFinanceiro' e o style='display:none' -->
+                                        <div class="panel panel-success" id="panelFinanceiro" style>
+                                            <div class="panel-heading">
+                                                <h3 class="panel-title">
+                                                    <a class="collapse-icon up" data-toggle="collapse"
+                                                        href="#collapseSubFinanceiro">
+                                                        <span class="fluigicon fluigicon-money fluigicon-md"></span>
+                                                        Programação de
+                                                        Pagamentos
+                                                    </a>
+                                                </h3>
+                                            </div>
+
+                                            <div id="collapseSubFinanceiro" class="panel-collapse collapse in">
+                                                <div class="panel-body">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-bordered table-striped"
+                                                            tablename="tabela_pagamentos" id="tabela_pagamentos"
+                                                            noaddbutton="true">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style="width: 25%">Sócio Favorecido</th>
+                                                                    <th class="col-consolidacao"
+                                                                        style="width: 15%; display:none;">Valor Bruto
+                                                                        (R$)</th>
+                                                                    <th class="col-consolidacao"
+                                                                        style="width: 15%; display:none; color: red;">
+                                                                        (-) Antecipado (R$)</th>
+                                                                    <th class="col-consolidacao"
+                                                                        style="width: 15%; display:none; color: green;">
+                                                                        (=) Saldo a Pagar</th>
+                                                                    <th style="width: 20%">Data Programada <span
+                                                                            class="text-danger">*</span></th>
+                                                                    <th style="width: 20%">Status do Pagamento <span
+                                                                            class="text-danger">*</span></th>
+                                                                    <th style="width: 20%">Data Efetiva (Qive)</th>
+                                                                    <th style="width: 15%">Protocolo Bancário</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td>
+                                                                        <!-- Campo preenchido via JS espelhando o Painel 2 -->
+                                                                        <input type="text" class="form-control"
+                                                                            name="pagFavorecido" id="pagFavorecido"
+                                                                            readonly>
+
+                                                                    </td>
+                                                                    <!-- Campos de Compensação -->
+                                                                    <td class="col-consolidacao" style="display:none;">
+                                                                        <input type="text" class="form-control money"
+                                                                            name="pagValorBruto" id="pagValorBruto"
+                                                                            readonly>
+                                                                    </td>
+                                                                    <td class="col-consolidacao" style="display:none;">
+                                                                        <input type="text" class="form-control money"
+                                                                            name="pagValorAntecipado"
+                                                                            id="pagValorAntecipado" placeholder="0,00">
+                                                                    </td>
+                                                                    <td class="col-consolidacao" style="display:none;">
+                                                                        <input type="text" class="form-control money"
+                                                                            name="pagSaldoPagar" id="pagSaldoPagar"
+                                                                            readonly>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="date" class="form-control"
+                                                                            name="pagDataProgramada"
+                                                                            id="pagDataProgramada">
+                                                                    </td>
+                                                                    <td>
+                                                                        <select class="form-control" name="pagStatus"
+                                                                            id="pagStatus">
+                                                                            <option value="Pendente">Pendente</option>
+                                                                            <option value="Autorizado">Autorizado
+                                                                            </option>
+                                                                            <option value="Liquidado">Liquidado</option>
+                                                                        </select>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="date" class="form-control"
+                                                                            name="pagDataEfetiva" id="pagDataEfetiva">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="text" class="form-control"
+                                                                            name="pagProtocolo" id="pagProtocolo"
+                                                                            placeholder="Automático ou Manual">
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div style="display: flex; align-items: center;">
+                                                            <button type="button" class="botaoAdicionar"
+                                                                onclick="wdkAddChild('tabela_pagamentos')">
+                                                                <span class="simboloBotao">+</span>
+                                                            </button>
+                                                            <span
+                                                                style="margin-left: 10px; font-weight: bold; color: #004578;">Adicionar
+                                                                Programação</span>
+                                                        </div>
+                                                    </div>
+                                                    <!-- Controle e Auditoria do Gateway Final -->
+                                                    <div class="row" id="divEncerramentoContabil"
+                                                        style="display: none;">
+                                                        <div class="col-md-12">
+                                                            <hr>
+                                                        </div>
+
+                                                        <!-- Checklist de Auditoria (Pág 40 do PDF) -->
+                                                        <div class="form-group col-md-8">
+                                                            <label style="color: #004578;">Checklist de Auditoria de
+                                                                Encerramento <span class="text-danger">*</span></label>
+                                                            <div class="checkbox"><label><input type="checkbox"
+                                                                        name="auditAta" id="auditAta" value="sim"> Ata
+                                                                    assinada por todos os diretores e arquivada</label>
+                                                            </div>
+                                                            <div class="checkbox"><label><input type="checkbox"
+                                                                        name="auditValores" id="auditValores"
+                                                                        value="sim">
+                                                                    Valores conferem e antecipações
+                                                                    foram compensadas</label></div>
+                                                            <div class="checkbox"><label><input type="checkbox"
+                                                                        name="auditImpostos" id="auditImpostos"
+                                                                        value="sim">
+                                                                    Impostos retidos e comprovantes
+                                                                    validados</label></div>
+                                                        </div>
+
+                                                        <div class="form-group col-md-4">
+                                                            <label for="decisaoSaldoFinal"
+                                                                style="color: #004578;">Possui
+                                                                Saldo Remanescente? <span
+                                                                    class="text-danger">*</span></label>
+                                                            <select class="form-control" name="decisaoSaldoFinal"
+                                                                id="decisaoSaldoFinal">
+                                                                <option value="">Selecione a decisão final...</option>
+                                                                <option value="NAO">Não. Encerrar Processo 100%</option>
+                                                                <option value="SIM">Sim. Devolver ao Planejamento para
+                                                                    Novo Rateio</option>
+                                                            </select>
+                                                        </div>
+                                                    </div><!-- divEncerramentoContabil -->
+                                                </div><!-- panel-body -->
+                                            </div><!-- collapseSubFinanceiro -->
+                                        </div><!-- panelFinanceiro -->
+                                    </div> <!-- Fim Sub-painel Financeiro -->
+                                </div> <!-- Fim Aba Financeiro -->
+
+                            </div> <!-- Fim Tab-Content -->
+                        </div>
+                    </div>
+                </div> <!-- Fim Painel Principal 3 -->
+
+            </div> <!-- Fim do Accordion Group -->
+    </div> <!-- Fim container-fluid -->
+    </form>
+    </div> <!-- Fim fluig-style-guide -->
+
+    <!-- Import do JS Customizado (Criaremos na etapa de validações) -->
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script type="text/javascript" src="distribuicao_dividendos.js"></script>
+</body>
+
+</html>
