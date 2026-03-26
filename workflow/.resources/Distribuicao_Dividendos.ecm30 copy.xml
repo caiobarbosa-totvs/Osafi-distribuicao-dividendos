@@ -1274,7 +1274,7 @@
       <actionLabel></actionLabel>
       <returnPermited>false</returnPermited>
       <initialStateSequence>4</initialStateSequence>
-      <finalStateSequence>6</finalStateSequence>
+      <finalStateSequence>68</finalStateSequence> 
       <returnLabel></returnLabel>
       <name></name>
       <automaticLink>false</automaticLink>
@@ -1498,7 +1498,7 @@
       <actionLabel></actionLabel>
       <returnPermited>false</returnPermited>
       <initialStateSequence>65</initialStateSequence>
-      <finalStateSequence>68</finalStateSequence>
+      <finalStateSequence>4</finalStateSequence>
       <returnLabel></returnLabel>
       <name>Aprovar</name>
       <automaticLink>false</automaticLink>

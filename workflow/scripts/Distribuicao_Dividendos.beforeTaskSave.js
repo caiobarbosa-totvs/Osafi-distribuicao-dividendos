@@ -1,5 +1,5 @@
 function beforeTaskSave(colleagueId,nextSequenceId,userList){
-	log.info("🛡️ [AUDITORIA] beforeTaskSave Iniciado...");
+	/*log.info("[AUDITORIA] beforeTaskSave Iniciado...");
 
     // =========================================================
     // TAREFA 2: O "Radar" de Etapas
@@ -27,7 +27,7 @@ function beforeTaskSave(colleagueId,nextSequenceId,userList){
         hAPI.setCardValue("usuarioAprovacaoDiretoria", usuarioLogado);
         hAPI.setCardValue("dataAprovacaoDiretoria", dataExata);
 
-        log.info("✅ [AUDITORIA] Diretoria assinou. Usuário: " + usuarioLogado + " | Data: " + dataExata);
+        log.info("[AUDITORIA] Diretoria assinou. Usuário: " + usuarioLogado + " | Data: " + dataExata);
     
     
     // =========================================================
@@ -37,7 +37,7 @@ function beforeTaskSave(colleagueId,nextSequenceId,userList){
             hAPI.setCardValue("usuarioAvaliacaoControladoria", usuarioLogado);
             hAPI.setCardValue("dataAvaliacaoControladoria", dataExata);
             
-            log.info("✅ [AUDITORIA] Controladoria avaliou os impostos. Usuário: " + usuarioLogado + " | Data: " + dataExata);
+            log.info("[AUDITORIA] Controladoria avaliou os impostos. Usuário: " + usuarioLogado + " | Data: " + dataExata);
         }
-	}
+	}*/
 }

@@ -125,13 +125,13 @@
                             <div class="title">Distribuição por Sócio</div>
                         </div>
 
-                        <div id="step-aprovacao-dir" class="barraProgresso-step" data-step="3">
-                            <div class="title">Aprovação da Diretoria</div>
-                        </div>
-
                         <div id="step-av-controladoria" class="barraProgresso-step" data-step="4">
                             <div class="title">Avaliação Técnica - Controladoria</div>
                         </div>
+
+                        <div id="step-aprovacao-dir" class="barraProgresso-step" data-step="3">
+                            <div class="title">Aprovação da Diretoria</div>
+                        </div>                        
 
                         <div id="step-solicitacao-ata" class="barraProgresso-step" data-step="5">
                             <div class="title">Solicitação e Geração de Ata</div>
@@ -507,15 +507,14 @@
                                                                         <input type="zoom" class="form-control"
                                                                             name="naturezaOrcamentariaSocio"
                                                                             id="naturezaOrcamentariaSocio" data-zoom="{
-                                                                            'displayKey': 'NOME',
+                                                                            'displayKey': 'DESCRICAO',
                                                                             'datasetId': 'DS_NATUREZA_ORCAMENTARIA_FLUIG_20',
                                                                             'maximumSelectionLength': '1',
                                                                             'placeholder': 'Nat. Orçamentária...',
                                                                             'fields': [
-                                                                                { 'field': 'CODNAT', 'label': 'Código', 'visable': 'false' },
-                                                                                { 'field': 'NOME', 'label': 'Nome', 'standard': 'true' },
-                                                                                { 'field': 'CAMPO_ZOOM', 'label': 'Coligada', 'standard': 'true' }
-                                                                            ]
+                                                                                { 'field': 'CODTBORCAMENTO', 'label': 'Código' },
+                                                                                { 'field': 'DESCRICAO', 'label': 'Descrição' },
+                                                                                { 'field': 'CODNAT', 'label': 'Código Natureza', 'visable': 'false' }]
                                                                         }">
                                                                     </td>
 

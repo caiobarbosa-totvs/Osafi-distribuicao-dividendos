@@ -104,6 +104,22 @@ var DistDividendos = {
             });
         });
 
+        // --- EVENTO EXTRA: Regra de Transição da Lei 15.270/2025 ---
+        $('#dataAtaAnterior').on('change', function () {
+            var dataEscolhida = $(this).val();
+            if (dataEscolhida) {
+                var ano = parseInt(dataEscolhida.split('-')); // Extrai o Ano (Ex: 2025)
+
+                if (ano <= 2025) {
+                    $('#alertaRegraTransicao').removeClass('alert-info alert-warning').addClass('alert-success');
+                    $('#alertaRegraTransicao').html('<strong>✓ Isento:</strong> Atas emitidas até Dezembro/2025 são isentas de tributação.');
+                } else {
+                    $('#alertaRegraTransicao').removeClass('alert-info alert-success').addClass('alert-warning');
+                    $('#alertaRegraTransicao').html('<strong>⚠ Tributado:</strong> Atas emitidas a partir de Janeiro/2026 sofrem tributação pela Lei 15.270/2025.');
+                }
+            }
+        });
+
         // --- EVENTO 2: Lógica de Exibição do Motivo de Rejeição ---
         // Escuta as mudanças no radio button de "Decisão da Diretoria"
         $('input[name="decisaoDiretoria"]').on('change', function () {
@@ -125,17 +141,17 @@ var DistDividendos = {
         // --- EVENTO 3: Gatilhos de Cálculos Matemáticos ---
 
         // Quando sair do campo (blur) de Receita Bruta, Base Presumida ou Valor Proposto: recalcula tudo
-        $('#receitaBruta, #basePresumida, #valorProposto').on('blur', function () {
+        $('#receitaBruta, #basePresumida, #valorProposto').on('keyup change blur', function () {
             DistDividendos.calcularValores();
         });
 
-        // Escuta a digitação dinâmica NAS NOVAS COLUNAS de Percentual na tabela de Sócios
-        $('#tabela_socios').on('blur', "input[id^='percCapitalSocio___'], input[id^='percDistSocio___']", function () {
+        // Escuta a digitação dinâmica NAS NOVAS COLUNAS de Percentual na tabela de Sócios em tempo real
+        $('#tabela_socios').on('keyup change blur', "input[id^='percCapitalSocio___'], input[id^='percDistSocio___']", function () {
             DistDividendos.calcularValores();
         });
 
         // --- EVENTO 4: Cálculo da Compensação de Antecipações  ---
-        $('#tabela_pagamentos').on('blur', "input[id^='pagValorAntecipado___']", function () {
+        $('#tabela_pagamentos').on('keyup change blur', "input[id^='pagValorAntecipado___']", function () {
             var linha = $(this).attr('id').split('___')[1];
 
             // Pega o Bruto (vamos supor que você copiou o valor do rateio para cá via integração ou manual)
@@ -162,15 +178,17 @@ var DistDividendos = {
         if (atividade == ATIVIDADES.INICIO || atividade == ATIVIDADES.INICIALIZACAO || atividade == ATIVIDADES.PLANEJAMENTO_FINANCEIRO) {
             stepAtual = 1;
 
+        } else if (atividade == ATIVIDADES.AVALIACAO_TECNICA) {
+            stepAtual = 3; // Controladoria agora é o passo 3
+            
+            // Abre o formulário já focando automaticamente na aba da Controladoria
+            $('a[href="#tab_controladoria"]').tab('show');
+            
         } else if (atividade == ATIVIDADES.APROVACAO_CONSELHO) {
-            stepAtual = 3;
+            stepAtual = 4; // Diretoria agora é o passo 4
+            
             // Esconde a aba da Controladoria, pois o Diretor não interage com ela
             $('a[href="#tab_controladoria"]').parent().hide();
-
-        } else if (atividade == ATIVIDADES.AVALIACAO_TECNICA) {
-            stepAtual = 4;
-            //  Abre o formulário já focando automaticamente na aba da Controladoria
-            $('a[href="#tab_controladoria"]').tab('show');
 
         } else if (atividade == ATIVIDADES.SOLICITACAO_ATA || atividade == ATIVIDADES.ASSINATURA_ATA) {
             stepAtual = 5;
@@ -271,54 +289,64 @@ var DistDividendos = {
     // 5. Cálculos Matemáticos (Limite Isento, Rateio)
     calcularValores: function () {
         var self = this;
-        var receitaBruta = self.getFloatValue($('#receitaBruta').val());
-        var percBase = self.getFloatValue($('#basePresumida').val());
+        // 1. Define o Teto Fixo de Isenção da Nova Lei
+        var limiteIsento = 50000.00;
+        $('#limiteIsento').val(self.getMoneyString(limiteIsento));
 
-        if (receitaBruta > 0 && percBase > 0) {
-            // Calcula o valor da Base Presumida
-            var valorBase = receitaBruta * (percBase / 100);
-
-            // Calcula a estimativa dos impostos federais (Ajuste as alíquotas conforme regra fiscal da empresa)
-            var irpj = valorBase * 0.15;
-            var csll = valorBase * 0.09;
-            var pis = receitaBruta * 0.0065;
-            var cofins = receitaBruta * 0.03;
-
-            // O limite isento é a Base Presumida menos os impostos pagos
-            var limiteIsento = valorBase - (irpj + csll + pis + cofins);
-
-            // Preenche o campo em tela (somente leitura)
-            $('#limiteIsento').val(self.getMoneyString(limiteIsento));
-        } else {
-            $('#limiteIsento').val('');
-        }
-
+        // 2. Captura o valor proposto na tela
         var valorProposto = self.getFloatValue($('#valorProposto').val());
-        var limiteCalculado = self.getFloatValue($('#limiteIsento').val());
 
-        if (valorProposto > 0 && limiteCalculado > 0 && valorProposto > limiteCalculado) {
-            // Excede Limite Isento (Revela o alerta HTML)
-            $('#alertaLimite').show();
-        } else {
-            $('#alertaLimite').hide();
+        // 3. Aplica a Regra Tributária
+        if (valorProposto > 0 && valorProposto > limiteIsento) {
+            $('#alertaTributacao').show(); // Mostra o alerta de tributação
+
+            var excedente = valorProposto - limiteIsento;
+            var irrf = excedente * 0.10; // Alíquota de 10%
+            var liquidoPagar = valorProposto - irrf;
+
+            $('#valorExcedente').val(self.getMoneyString(excedente));
+            $('#valorIRRF').val(self.getMoneyString(irrf));
+            $('#valorLiquidoPagar').val(self.getMoneyString(liquidoPagar));
+        } else if (valorProposto > 0 && valorProposto <= limiteIsento) {
+            $('#alertaTributacao').hide();
+
+            $('#valorExcedente').val('0,00');
+            $('#valorIRRF').val('0,00');
+            $('#valorLiquidoPagar').val(self.getMoneyString(valorProposto)); // Recebe 100%
         }
 
         var somaParticipacao = 0;
 
-        // O cálculo financeiro agora usa estritamente o Percentual de DISTRIBUIÇÃO
+        // Motor Matemático: Valida Distribuição Desproporcional ou Proporcional (Capital)
         $("input[id^='percDistSocio___']").each(function () {
-            // Extração segura do índice da linha
-            var linha = $(this).attr('id').split('___')[1];
-            var percentualDist = self.getFloatValue($(this).val());
+            
+            // CORREÇÃO: O índice correto do split no Fluig é sempre 1
+            var linha = $(this).attr('id').split('___')[3];
+            
+            // LOG 1: Identifica em qual linha da tabela o loop está operando
+            console.log("[DEBUG RATEIO] Lendo Linha: " + linha);
 
-            if (percentualDist > 0 && valorProposto > 0) {
+            var percDist = self.getFloatValue($("#percDistSocio___" + linha).val());
+            var percCap  = self.getFloatValue($("#percCapitalSocio___" + linha).val());
+            
+            // LOG 2: Mostra os valores capturados na tela
+            console.log("[DEBUG RATEIO] Linha " + linha + " | % Dist: " + percDist + " | % Capital: " + percCap);
+
+            // Lógica de Fallback: Se preencheu % de Distribuição, usa ele. Se não, usa o % de Capital.
+            var percentualBase = (percDist > 0) ? percDist : percCap;
+
+            if (percentualBase > 0 && valorProposto > 0) {
                 // Calcula o valor a receber deste sócio e injeta na tela (readonly)
-                var valorReceber = valorProposto * (percentualDist / 100);
+                var valorReceber = valorProposto * (percentualBase / 100);
+                
+                // LOG 3: Mostra o valor financeiro final antes de injetar no HTML
+                console.log("[DEBUG RATEIO] Linha " + linha + " | Valor Proposto: " + valorProposto + " * " + percentualBase + "% = R$ " + valorReceber);
+                
                 $("#valorSocio___" + linha).val(self.getMoneyString(valorReceber));
-
-                somaParticipacao += percentualDist;
+                somaParticipacao += percentualBase;
             } else {
-                $("#valorSocio___" + linha).val('');
+                // Se zerado, limpa o campo financeiro
+                $("#valorSocio___" + linha).val('0,00');
             }
         });
 
@@ -381,6 +409,22 @@ function setSelectedZoomItem(selectedItem) {
             $("#bancoSocio___" + linha).val(selectedItem.BANCO || '');
             $("#agenciaSocio___" + linha).val(selectedItem.AGENCIA || '');
             $("#contaSocio___" + linha).val(selectedItem.CONTA || '');
+
+            // 2.3 Motor de Detecção de Coligadas (Integração Sincronizada)
+            var cnpjLimpo = selectedItem.CPF_CNPJ.replace(/\D/g, ''); // Remove máscara
+
+            // Cria um filtro para perguntar ao RM se esse CNPJ é de uma coligada
+            var c1 = DatasetFactory.createConstraint('CNPJ', cnpjLimpo, cnpjLimpo, ConstraintType.MUST);
+            var dsColigada = DatasetFactory.getDataset('ds_dividendos_rm_filial', null, new Array(c1), null);
+
+            // Se o dataset retornar alguma linha, é uma coligada!
+            if (dsColigada != null && dsColigada.values != null && dsColigada.values.length > 0) {
+                $("#flagColigada___" + linha).val("SIM");
+                $("#alertaColigada___" + linha).show();
+            } else {
+                $("#flagColigada___" + linha).val("NAO");
+                $("#alertaColigada___" + linha).hide();
+            }
 
             // Dispara a máscara dinâmica (formata CPF/CNPJ e dados instantaneamente)
             if (typeof DistDividendos !== "undefined" && typeof DistDividendos.aplicarMascaras === "function") {

@@ -81,11 +81,13 @@ function enableFields(form) {
 // ==========================================================================
 
 function bloquearPlanejamentoFinanceiro(form) {
-    // 1. Array de campos fixos (Escalável e limpo)
+    // 1. Array de campos fixos (Escalável e limpo com os novos campos da Lei 15.270)
     var camposCabecalho = [
-        "anoReferencia", "regimeTributario", "receitaBruta", "basePresumida", 
-        "origemLucro", "valorProposto", "empresaFilial", "centroCusto", "solicitacoesVinculadas"
+        "anoReferencia", "regimeTributario", "receitaBruta", "basePresumida",
+        "origemLucro", "valorProposto", "empresaFilial", "centroCusto", "solicitacoesVinculadas",
+        "valorExcedente", "valorIRRF", "valorLiquidoPagar", "dataAtaAnterior", "naturezaOrcamentaria"
     ];
+
     
     // Se um campo não existir, ele não derruba os outros!
     for (var c = 0; c < camposCabecalho.length; c++) {
@@ -103,6 +105,7 @@ function bloquearPlanejamentoFinanceiro(form) {
         
         var camposTabela = [
             "nomeSocio___" + linha, "cpfCnpjSocio___" + linha, "centroCustoSocio___" + linha,
+            "naturezaOrcamentariaSocio___" + linha, // Novo campo bloqueado
             "percCapitalSocio___" + linha, "percDistSocio___" + linha, "valorSocio___" + linha,
             "bancoSocio___" + linha, "agenciaSocio___" + linha, "contaSocio___" + linha
         ];
@@ -124,9 +127,18 @@ function bloquearDiretoria(form) {
 }
 
 function bloquearControladoria(form) {
+    // Grupo Contábil
+    form.setEnabled("checkDRE", false);
+    form.setEnabled("checkReserva", false);
+    form.setEnabled("checkSaldo", false);
+    
+    // Grupo Fiscal
     form.setEnabled("checkRegime", false);
     form.setEnabled("checkDctf", false);
-    form.setEnabled("checkLei9249", false);
+    form.setEnabled("checkLimite50k", false);
+    form.setEnabled("checkLei15270", false);
+    
+    // Decisão e Parecer
     form.setEnabled("decisaoControladoria", false);
     form.setEnabled("parecerControladoria", false);
 }
