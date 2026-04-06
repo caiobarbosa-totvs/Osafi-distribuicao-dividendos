@@ -1,3 +1,8 @@
+// =========================================================
+// VARIÁVEIS GLOBAIS DE MEMÓRIA
+// =========================================================
+window.coligadaGlobal = "";
+
 var ATIVIDADES = {
     INICIO: 0,
     INICIALIZACAO: 1,
@@ -108,14 +113,14 @@ var DistDividendos = {
                 // Se Antecipação: Oculta as verificações exclusivas de Balanço final
                 $('#checkReserva').closest('.checkbox').hide();
                 $('#checkSaldo').closest('.checkbox').hide();
-                
+
                 // Muda o texto mantendo o checkbox seguro na tela
                 $('#checkDRE').parent().html('<input type="checkbox" name="checkDRE" id="checkDRE" value="sim"> Validação de Balancete Intermediário anexado');
             } else {
                 // Se Distribuição: Mostra todas as verificações
                 $('#checkReserva').closest('.checkbox').show();
                 $('#checkSaldo').closest('.checkbox').show();
-                
+
                 // Muda o texto mantendo o checkbox seguro na tela
                 $('#checkDRE').parent().html('<input type="checkbox" name="checkDRE" id="checkDRE" value="sim"> Validação de DRE e Balanço Patrimonial anexados');
             }
@@ -169,7 +174,7 @@ var DistDividendos = {
         $('#anoReferencia').on('keyup change blur', function () {
             // Quando o ano mudar, chama a função que vai no banco de dados ler os saldos daquele ano específico
             DistDividendos.carregarDashboards();
-            
+
             // Opcional: Como o ano mudou, é bom recalcular a tributação também
             DistDividendos.calcularValores();
         });
@@ -500,7 +505,7 @@ var DistDividendos = {
 
         try {
             // =========================================================
-            // CONSULTA 1: Solicitações "Em Andamento"
+            // Solicitações "Em Andamento"
             // Lemos o dataset interno do Fluig (workflowProcess)
             // =========================================================
             var c1 = DatasetFactory.createConstraint("processId", "Distribuicao_Dividendos", "Distribuicao_Dividendos", ConstraintType.MUST);
@@ -511,7 +516,7 @@ var DistDividendos = {
             $("#dashSolicitacoesAndamento").val(qtdAndamento);
 
             // =========================================================
-            // CONSULTA 2: Posições Financeiras (Saldos)
+            // Posições Financeiras (Saldos)
             // Lemos o histórico do dataset do próprio formulário
             // =========================================================
             // Nota: O nome do dataset geralmente é o mesmo ID do Processo/Formulário
@@ -573,11 +578,28 @@ $(document).ready(function () {
     DistDividendos.init();
 });
 
-// Função disparada automaticamente pelo Fluig sempre que uma nova linha é adicionada no Pai x Filho (wdkAddChild)
+// Função disparada automaticamente pelo Fluig sempre que uma nova linha é adicionada
 function fnWdkAddChild(tableName) {
     if (tableName === "tabela_socios") {
-        // Reaplica as máscaras na nova linha criada
         DistDividendos.aplicarMascaras();
+        console.log("Bateu aqui Tabela Sócio");
+
+        if (window["empresaFilial"]) {
+            console.log("Bateu aqui objEmpresa");
+            var objEmpresa = window["empresaFilial"].getSelectedItems();
+
+            if (objEmpresa !== null && objEmpresa.length > 0) {
+                console.log("Bateu aqui Objeto inteiro");
+                // Adicionado o índice  para acessar o objeto dentro do Array
+                var codColigada = objEmpresa.CODCOLIGADA;
+
+                var inputsCentroCusto = $("input[id^='centroCustoSocio___']");
+                var idNovaLinha = inputsCentroCusto.last().attr('id');
+
+                // Injeta a 'senha' (Coligada)
+                reloadZoomFilterValues(idNovaLinha, "CODCOLIGADA," + codColigada);
+            }
+        }
     }
 }
 
@@ -588,16 +610,25 @@ function setSelectedZoomItem(selectedItem) {
     console.log("[DEBUG ZOOM] O campo " + inputId + " foi selecionado!");
     console.log("[DEBUG ZOOM] Pacote de dados recebido: ", selectedItem);
 
-    // 1. Filtro em Cascata (Empresa/Filial -> Centro de Custos)
+    // 1. Filtro em Cascata (Empresa/Filial -> Centros de Custo)
     if (inputId == "empresaFilial") {
-        // Ao selecionar a Empresa/Filial, recarrega o zoom de Centro de Custos.
+        // SALVA NA MEMÓRIA GLOBAL O CÓDIGO DA COLIGADA
+        window.coligadaGlobal = selectedItem.CODCOLIGADA;
+
+        // 1.1 Atualiza o Centro de Custo Global
         reloadZoomFilterValues("centroCusto", "CODCOLIGADA," + selectedItem.CODCOLIGADA);
+
+        // 1.2 Atualiza TODOS os Centros de Custo que já existem na Tabela de Rateio
+        $("input[id^='centroCustoSocio___']").each(function () {
+            var idLinha = $(this).attr('id');
+            reloadZoomFilterValues(idLinha, "CODCOLIGADA," + selectedItem.CODCOLIGADA);
+        });
     }
 
-    if (inputId == "nomeSocio") {
+    /*if (inputId == "nomeSocio") {
         // Ao selecionar a Empresa/Filial, recarrega o zoom de Centro de Custos.
         reloadZoomFilterValues("centroCusto", "CODCOLIGADA," + selectedItem.CODCOLIGADA);
-    }
+    }*/
 
     // 2. LÓGICA ORIGINAL MANTIDA (Tabela de Rateio Pai x Filho)
     if (inputId.match(/^nomeSocio___/)) {
@@ -617,13 +648,13 @@ function setSelectedZoomItem(selectedItem) {
 
         } else {
             // 2.2 Autopreenchimento Seguro (Injeta os dados separados)
-            $("#cpfCnpjSocio___" + linha).val(selectedItem.CPF_CNPJ || '');
+            $("#cpfCnpjSocio___" + linha).val(selectedItem.CNPJ || '');
             $("#bancoSocio___" + linha).val(selectedItem.BANCO || '');
             $("#agenciaSocio___" + linha).val(selectedItem.AGENCIA || '');
-            $("#contaSocio___" + linha).val(selectedItem.CONTA || '');
+            $("#contaSocio___" + linha).val(selectedItem.CONTA_CORRENTE || '');
 
             // 2.3 Motor de Detecção de Coligadas (Integração Sincronizada)
-            var cnpjLimpo = selectedItem.CPF_CNPJ.replace(/\D/g, ''); // Remove máscara
+            var cnpjLimpo = selectedItem.CNPJ.replace(/\D/g, ''); // Remove máscara
 
             // Cria um filtro para perguntar ao RM se esse CNPJ é de uma coligada
             var c1 = DatasetFactory.createConstraint('CNPJ', cnpjLimpo, cnpjLimpo, ConstraintType.MUST);
@@ -652,8 +683,17 @@ function removedZoomItem(removedItem) {
 
     // 1. Limpeza em Cascata
     if (inputId == "empresaFilial") {
-        // Se a Empresa/Filial for apagada, limpa o filtro do Centro de Custos
-        reloadZoomFilterValues("centroCusto", "CODCOLIGADA," + "");
+        // Apaga a memória
+        window.coligadaGlobal = "";
+
+        // Limpa o Global
+        reloadZoomFilterValues("centroCusto", "CODCOLIGADA,");
+
+        // Limpa os Centros de Custo de todas as linhas da tabela
+        $("input[id^='centroCustoSocio___']").each(function () {
+            var idLinha = $(this).attr('id');
+            reloadZoomFilterValues(idLinha, "CODCOLIGADA,");
+        });
     }
 
     // 2. LÓGICA ORIGINAL MANTIDA
@@ -706,3 +746,49 @@ function setZoomData(instance, value) {
     // 3. Dispara o recálculo financeiro (já que a porcentagem foi apagada)
     DistDividendos.calcularValores();
 } */
+
+// ==========================================================================
+// MOTOR DE GERAÇÃO DE PDF (Missão 3 e 4)
+// ==========================================================================
+
+function gerarAtaPDF() {
+    console.log("[FÁBRICA PDF] Iniciando coleta de dados do formulário...");
+
+    // 1. Extração Segura de Dados (Lendo o HTML via jQuery)
+    // Criamos o objeto 'dadosAta' para organizar as informações (Clean Code)
+    var dadosAta = {
+        empresa: $('#empresaFilial').val() || "Empresa Não Informada", // Pega do zoom
+        data: $('#dataAta').val(),
+        local: $('#localAta').val(),
+        horario: $('#horarioAta').val(),
+        periodo: $('#periodoReferenciaAta').val(),
+        resultado: $('#resultadoLiquido').val(),
+        disponivel: $('#totalDisponivel').val(),
+        justificativa: $('#justificativaAta').val()
+    };
+
+    // 2. Trava de Segurança Sênior (Validação)
+    // Se algum campo vital estiver vazio, nós barramos a geração do PDF
+    if (!dadosAta.data || !dadosAta.local || !dadosAta.resultado || !dadosAta.justificativa) {
+        FLUIGC.toast({
+            title: 'Atenção: ',
+            message: 'Preencha todos os campos obrigatórios da aba da Ata antes de gerar o PDF.',
+            type: 'warning',
+            timeout: 'fast'
+        });
+        return; // O comando 'return' aborta a função aqui e não tenta desenhar o PDF
+    }
+
+    console.log("[FÁBRICA PDF] Dados coletados com sucesso: ", dadosAta);
+
+    // 3. Aviso temporário (Removeremos na Missão 4)
+    FLUIGC.toast({
+        title: 'Leitura Concluída: ',
+        message: 'Os dados foram coletados com sucesso! Preparando para desenhar a folha...',
+        type: 'success',
+        timeout: 'fast'
+    });
+
+    // 4. Aqui chamaremos o esqueleto do documento (Faremos isso na Missão 4)
+    // desenharEsqueletoPDF(dadosAta);
+}

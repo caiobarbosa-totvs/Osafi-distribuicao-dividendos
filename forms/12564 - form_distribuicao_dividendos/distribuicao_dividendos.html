@@ -46,19 +46,22 @@
             <!-- Motor Oculto para Consulta de Sócios via JS -->
             <div style="display:none;">
                 <input type="zoom" class="form-control" name="zoomSociosOculto" id="zoomSociosOculto" data-zoom="{
-                    'displayKey': 'CAMPO_ZOOM',
+                    'displayKey': 'NOME',
                     'datasetId': 'ds_dividendos_rm_socio',
                     'fields': [
                         { 'field': 'CODIGO', 'label': 'Código' },
-                        { 'field': 'RAZAO_SOCIAL', 'label': 'Razão Social' },
-                        { 'field': 'CNPJ', 'label': 'CNPJ/CPF', 'standard': 'true'},
-                        { 'field': 'ATIVO', 'label': 'Ativo' },
-                        { 'field': 'STATUS_BLOQUEIO', 'label': 'Status Bloqueio' },
-                        { 'field': 'TIPO_PAGAMENTO', 'label': 'Tipo Pagamento' },
-                        { 'field': 'BANCO', 'label': 'Banco' },
-                        { 'field': 'AGENCIA', 'label': 'Agência' },
-                        { 'field': 'CONTA_CORRENTE', 'label': 'Conta Corrente' },
-                        { 'field': 'CHAVE_PIX', 'label': 'Chave PIX' }
+        { 'field': 'RAZAO_SOCIAL', 'label': 'Razão Social' },
+        { 'field': 'NOME', 'label': 'Nome Fantasia', 'standard': 'true' },
+        { 'field': 'CNPJ', 'label': 'CNPJ/CPF' },
+        { 'field': 'ATIVO', 'label': 'Ativo' },
+        { 'field': 'STATUS_BLOQUEIO', 'label': 'Bloqueio' },
+        { 'field': 'TIPO_PAGAMENTO', 'label': 'Pagamento' },
+        { 'field': 'BANCO', 'label': 'Banco' },
+        { 'field': 'AGENCIA', 'label': 'Agência' },
+        { 'field': 'DIGITO_AGENCIA', 'label': 'Díg. Ag.' },
+        { 'field': 'CONTA_CORRENTE', 'label': 'Conta' },
+        { 'field': 'DIGITO_CC', 'label': 'Díg. CC' },
+        { 'field': 'CHAVE_PIX', 'label': 'Chave PIX' }
                     ]
                 }">
             </div>
@@ -400,13 +403,13 @@
                                                                     class="text-danger">*</span></label>
                                                             <input type="zoom" class="form-control" name="centroCusto"
                                                                 id="centroCusto" data-zoom="{
-                                                                'displayKey': 'NOME',
+                                                                'displayKey': 'CAMPO_ZOOM',
                                                                 'datasetId': 'ds_dividendos_rm_centro_custo',
                                                                 'maximumSelectionLength': '1',
                                                                 'placeholder': 'Selecione o Centro de Custo...',
                                                                 'fields': [
                                                                     { 'field': 'CODCCUSTO', 'label': 'Código' },
-                                                                    { 'field': 'NOME', 'label': 'Nome', 'standard': 'true' }
+    { 'field': 'CAMPO_ZOOM', 'label': 'Centro de Custo', 'standard': 'true' }
                                                                 ]
                                                             }">
                                                         </div>
@@ -489,13 +492,13 @@
                                                                     <td>
                                                                         <input type="zoom" class="form-control"
                                                                             name="nomeSocio" id="nomeSocio" data-zoom="{
-                                                                            'displayKey': 'NOME_SOCIO',
+                                                                            'displayKey': 'CAMPO_ZOOM',
                                                                             'datasetId': 'ds_dividendos_rm_socio',
                                                                             'maximumSelectionLength': '1',
                                                                             'placeholder': 'Buscar Sócio...',
                                                                             'fields': [
-                                                                                { 'field': 'CPF_CNPJ', 'label': 'CPF/CNPJ' },
-                                                                                { 'field': 'NOME_SOCIO', 'label': 'Sócio', 'standard': 'true' }
+                                                                                { 'field': 'CNPJ', 'label': 'CPF/CNPJ' },
+                                                                                { 'field': 'CAMPO_ZOOM', 'label': 'Sócio', 'standard': 'true' }
                                                                             ]
                                                                         }">
                                                                         <input type="hidden" name="flagColigada"
@@ -519,15 +522,15 @@
                                                                         <input type="zoom" class="form-control"
                                                                             name="centroCustoSocio"
                                                                             id="centroCustoSocio" data-zoom="{
-                                                                            'displayKey': 'NOME',
-                                                                            'datasetId': 'ds_dividendos_rm_centro_custo',
-                                                                            'maximumSelectionLength': '1',
-                                                                            'placeholder': 'Selecione o Centro de Custo...',
-                                                                            'fields': [
-                                                                                { 'field': 'CODCCUSTO', 'label': 'Código' },
-                                                                                { 'field': 'NOME', 'label': 'Nome', 'standard': 'true' }
-                                                                            ]                                                                   
-                                                                        }">
+    'displayKey': 'CAMPO_ZOOM',
+    'datasetId': 'ds_dividendos_rm_centro_custo',
+    'maximumSelectionLength': '1',
+    'placeholder': 'Selecione o Centro de Custo...',
+    'fields': [
+        { 'field': 'CODCCUSTO', 'label': 'Código' },
+        { 'field': 'CAMPO_ZOOM', 'label': 'Centro de Custo', 'standard': 'true' }
+    ]
+}">
                                                                     </td>
                                                                     <!-- Novo Zoom: Natureza Orçamentária da Linha -->
                                                                     <td>

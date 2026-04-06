@@ -48,6 +48,7 @@ function createDataset(fields, constraints, sortFields) {
                 dataset.addRow(new Array(retColigada, codCCusto, nome, campoZoom));
             }
         }
+
         return dataset;
     } catch (e) {
         log.error("ERRO [ds_dividendos_rm_centro_custo]: " + e.toString());
