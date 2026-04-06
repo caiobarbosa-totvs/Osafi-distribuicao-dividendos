@@ -792,6 +792,7 @@ function gerarAtaPDF() {
     // 4. Aqui chamaremos o esqueleto do documento
     desenharEsqueletoPDF(dadosAta);
 
+
     // ==========================================================================
     // ESQUELETO DO DOCUMENTO (Fábrica pdfmake)
     // ==========================================================================
@@ -805,43 +806,49 @@ function gerarAtaPDF() {
         // 2. A Estrutura Mestra (Document-definition-object)
         var docDefinition = {
             pageSize: 'A4',
-            pageMargins: [2, 3], // [Esquerda, Topo, Direita, Baixo]
+
+            // CORREÇÃO 1: Margens profissionais [Esquerda, Topo, Direita, Baixo]
+            pageMargins: [40, 60, 40, 60],
 
             // 3. O Conteúdo (A injeção das variáveis no texto legal)
             content: [
-                // CABEÇALHO
-                { text: 'ATA DE DISTRIBUIÇÃO DE DIVIDENDOS', style: 'header', alignment: 'center' },
-                { text: dadosAta.empresa.toUpperCase(), style: 'subheader', alignment: 'center', margin: [4] },
+                // CABEÇALHO (Ajustado margin-bottom para desgrudar do texto e não invadir o topo)
+                { text: 'ATA DE DISTRIBUIÇÃO DE DIVIDENDOS', style: 'header', alignment: 'center', margin: [0, 0, 0, 5] },
+                { text: dadosAta.empresa.toUpperCase(), style: 'subheader', alignment: 'center', margin: [0, 0, 0, 25] },
 
                 // TÓPICO 1: PREÂMBULO LEGAL
                 { text: '1. DADOS DA REUNIÃO', style: 'topic' },
-                { text: 'Aos ' + dataFormatada + ', às ' + dadosAta.horario + ' horas, reuniram-se os representantes e sócios em ' + dadosAta.local + ' para deliberação financeira das contas da empresa.' },
-                { text: '', margin: [5] }, // Espaçador
+                { text: 'Aos ' + dataFormatada + ', às ' + dadosAta.horario + ' horas, reuniram-se os representantes e sócios em ' + dadosAta.local + ' para deliberação financeira das contas da empresa.', margin: [0, 0, 0, 15] },
 
                 // TÓPICO 2: DELIBERAÇÕES
                 { text: '2. DELIBERAÇÕES E RESULTADOS', style: 'topic' },
-                { text: 'A Diretoria apresentou o balanço e a demonstração de resultados do período compreendido entre ' + dadosAta.periodo + '.' },
-                { text: '• Resultado Líquido Apurado: R$ ' + dadosAta.resultado, margin: [5, 6] },
-                { text: '• Total Disponível para Distribuição: R$ ' + dadosAta.disponivel, margin: [5, 7, 8] },
-                { text: 'Justificativa e Impacto Financeiro: ' + dadosAta.justificativa, margin: [5] },
+                { text: 'A Diretoria apresentou o balanço e a demonstração de resultados do período compreendido entre ' + dadosAta.periodo + '.', margin: [0, 0, 0, 8] },
+
+                // Listas com pequeno recuo à esquerda [10]
+                { text: '• Resultado Líquido Apurado: R$ ' + dadosAta.resultado, margin: [10, 0, 0, 3] },
+                { text: '• Total Disponível para Distribuição: R$ ' + dadosAta.disponivel, margin: [10, 0, 0, 10] },
+
+                { text: 'Justificativa e Impacto Financeiro: ' + dadosAta.justificativa, margin: [0, 0, 0, 15] },
 
                 // TÓPICO 3: A TABELA DE DISTRIBUIÇÃO
-                { text: '3. QUADRO DE DISTRIBUIÇÃO AOS SÓCIOS', style: 'topic', margin: [6, 8] },
-                { text: 'Fica aprovada a distribuição do valor supramencionado, em moeda corrente, respeitando as proporções do quadro de rateio.', margin: [8] },
+                { text: '3. QUADRO DE DISTRIBUIÇÃO AOS SÓCIOS', style: 'topic' },
+                { text: 'Fica aprovada a distribuição do valor supramencionado, em moeda corrente, respeitando as proporções do quadro de rateio.', margin: [0, 0, 0, 15] },
 
-                // ⚠️ AQUI ENTRARÁ A INTELIGÊNCIA DA MISSÃO 5 (O LAÇO DE REPETIÇÃO)
-                { text: '[A tabela dinâmica de sócios será desenhada aqui na próxima missão...]', color: 'red', italics: true, alignment: 'center', margin: [4] },
+                // ⚠️ AQUI ENTRARÁ A INTELIGÊNCIA DA PRÓXIMA ETAPA
+                // Aplicada grande margem superior e inferior para isolar o quadro
+                { text: '[A tabela dinâmica de sócios será desenhada aqui na próxima missão...]', color: 'red', italics: true, alignment: 'center', margin: [0, 30, 0, 40] },
 
                 // TÓPICO 4: ENCERRAMENTO E ASSINATURAS
-                { text: '\n\nNada mais havendo a tratar, a reunião foi encerrada, lavrando-se a presente Ata que vai assinada pelos representantes e conformada pela Controladoria.' },
-                { text: '\n\n\n\n__________________________________________________\nRepresentante Legal / Diretoria', alignment: 'center' }
+                { text: 'Nada mais havendo a tratar, a reunião foi encerrada, lavrando-se a presente Ata que vai assinada pelos representantes e conformada pela Controladoria.', margin: [0, 0, 0, 50] },
+                { text: '__________________________________________________\nRepresentante Legal / Diretoria', alignment: 'center' }
             ],
 
             // 4. O "CSS" do PDF (Dicionário de Estilos)
+            // CORREÇÃO 3: Ajuste fino para os tópicos espaçarem os blocos de forma fluida
             styles: {
                 header: { fontSize: 16, bold: true, color: '#333333' },
-                subheader: { fontSize: 13, bold: true, color: '#004578' }, // Cor base TOTVS
-                topic: { fontSize: 11, bold: true, color: '#000000', margin: [6, 8] }
+                subheader: { fontSize: 13, bold: true, color: '#004578' },
+                topic: { fontSize: 12, bold: true, color: '#000000', margin: [0, 15, 0, 5] } // Tópicos sempre dão um salto maior no topo
             }
         };
 
