@@ -33,6 +33,7 @@ var DistDividendos = {
         this.aplicarMascaras();
         this.bindEventos();
         this.controlarPaineis();
+        this.carregarDashboards();
     },
 
     // 2. Aplicação de Máscaras (Dinheiro, CPF/CNPJ, Percentual)
@@ -102,21 +103,41 @@ var DistDividendos = {
                 type: 'warning',
                 timeout: 'fast'
             });
+
+            if (origemSelecionada === 'corrente') {
+                // Se Antecipação: Oculta as verificações exclusivas de Balanço final
+                $('#checkReserva').closest('.checkbox').hide();
+                $('#checkSaldo').closest('.checkbox').hide();
+                
+                // Muda o texto mantendo o checkbox seguro na tela
+                $('#checkDRE').parent().html('<input type="checkbox" name="checkDRE" id="checkDRE" value="sim"> Validação de Balancete Intermediário anexado');
+            } else {
+                // Se Distribuição: Mostra todas as verificações
+                $('#checkReserva').closest('.checkbox').show();
+                $('#checkSaldo').closest('.checkbox').show();
+                
+                // Muda o texto mantendo o checkbox seguro na tela
+                $('#checkDRE').parent().html('<input type="checkbox" name="checkDRE" id="checkDRE" value="sim"> Validação de DRE e Balanço Patrimonial anexados');
+            }
         });
 
-        // --- EVENTO EXTRA: Regra de Transição da Lei 15.270/2025 ---
-        $('#dataAtaAnterior').on('change', function () {
+        // --- EVENTO EXTRA: Regra de Transição da Lei 15.270/2025 e Recálculo Tributário ---
+        $('#dataAtaAnterior, #dataAta').on('change', function () {
             var dataEscolhida = $(this).val();
             if (dataEscolhida) {
-                var ano = parseInt(dataEscolhida.split('-')); // Extrai o Ano (Ex: 2025)
+                var ano = parseInt(dataEscolhida.split('-')[0]); // Extrai o Ano (Ex: 2025)
+                var mes = parseInt(dataEscolhida.split('-')[1]); // Extrai o Mês
 
-                if (ano <= 2025) {
+                if (ano <= 2025 || (ano === 2025 && mes <= 12)) {
                     $('#alertaRegraTransicao').removeClass('alert-info alert-warning').addClass('alert-success');
-                    $('#alertaRegraTransicao').html('<strong>✓ Isento:</strong> Atas emitidas até Dezembro/2025 são isentas de tributação.');
+                    $('#alertaRegraTransicao').html('<strong>✓ Isento:</strong> Atas emitidas até Dezembro/2025 são isentas de tributação conforme Lei 15.270/2025.');
                 } else {
                     $('#alertaRegraTransicao').removeClass('alert-info alert-success').addClass('alert-warning');
-                    $('#alertaRegraTransicao').html('<strong>⚠ Tributado:</strong> Atas emitidas a partir de Janeiro/2026 sofrem tributação pela Lei 15.270/2025.');
+                    $('#alertaRegraTransicao').html('<strong>⚠ Tributado:</strong> Atas emitidas a partir de Janeiro/2026 sofrem tributação de 10% sobre excedente do limite de R$ 50.000/mês conforme Lei 15.270/2025.');
                 }
+
+                // 🔥 IMPORTANTÍSSIMO: Trigga o recálculo de toda a tributação
+                DistDividendos.calcularValores();
             }
         });
 
@@ -145,6 +166,14 @@ var DistDividendos = {
             DistDividendos.calcularValores();
         });
 
+        $('#anoReferencia').on('keyup change blur', function () {
+            // Quando o ano mudar, chama a função que vai no banco de dados ler os saldos daquele ano específico
+            DistDividendos.carregarDashboards();
+            
+            // Opcional: Como o ano mudou, é bom recalcular a tributação também
+            DistDividendos.calcularValores();
+        });
+
         // Escuta a digitação dinâmica NAS NOVAS COLUNAS de Percentual na tabela de Sócios em tempo real
         $('#tabela_socios').on('keyup change blur', "input[id^='percCapitalSocio___'], input[id^='percDistSocio___']", function () {
             DistDividendos.calcularValores();
@@ -164,6 +193,8 @@ var DistDividendos = {
             // Preenche o readonly com formatação monetária
             $("#pagSaldoPagar___" + linha).val(DistDividendos.getMoneyString(saldoPagar));
         });
+
+
     },
 
     // 4. Lógica da Timeline e Exibição de Painéis
@@ -180,15 +211,13 @@ var DistDividendos = {
 
         } else if (atividade == ATIVIDADES.AVALIACAO_TECNICA) {
             stepAtual = 3; // Controladoria agora é o passo 3
-            
+
             // Abre o formulário já focando automaticamente na aba da Controladoria
             $('a[href="#tab_controladoria"]').tab('show');
-            
+
         } else if (atividade == ATIVIDADES.APROVACAO_CONSELHO) {
             stepAtual = 4; // Diretoria agora é o passo 4
-            
-            // Esconde a aba da Controladoria, pois o Diretor não interage com ela
-            $('a[href="#tab_controladoria"]').parent().hide();
+            $('a[href="#tab_diretoria"]').tab('show');
 
         } else if (atividade == ATIVIDADES.SOLICITACAO_ATA || atividade == ATIVIDADES.ASSINATURA_ATA) {
             stepAtual = 5;
@@ -286,75 +315,255 @@ var DistDividendos = {
         return valorFloat.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     },
 
-    // 5. Cálculos Matemáticos (Limite Isento, Rateio)
+    // 5. Cálculos Matemáticos (Lei 15.270/2025 - Limite Isento, Tributação, Rateio)
     calcularValores: function () {
         var self = this;
-        // 1. Define o Teto Fixo de Isenção da Nova Lei
-        var limiteIsento = 50000.00;
-        $('#limiteIsento').val(self.getMoneyString(limiteIsento));
 
-        // 2. Captura o valor proposto na tela
+        // =========================================================
+        // 0. DETERMINAÇÃO DA FILIAÇÃO À LEI 15.270/2025
+        // Data da Ata = Critério para aplicação de tributação
+        // =========================================================
+        var dataAta = $('#dataAta').val() || $('#dataAtaAnterior').val() || new Date().toISOString().split('T')[0];
+        var anoAta = parseInt(dataAta.split('-')[0]);
+        var mesAta = parseInt(dataAta.split('-')[1]);
+
+        // REGRA DE TRANSIÇÃO:
+        // Atas emitidas até Dezembro/2025 = ISENTAS
+        // Atas emitidas a partir de Janeiro/2026 = TRIBUTADAS
+        var aplicaLei15270 = (anoAta > 2025) || (anoAta === 2025 && mesAta > 12) ? true : false;
+
+        console.log("[LEI 15.270/2025] Data Ata: " + dataAta + " | Aplica Lei: " + aplicaLei15270);
+
+        // =========================================================
+        // 1. CÁLCULO DO LIMITE DE DISTRIBUIÇÃO (Regra Contábil)
+        // Fórmula: Receita Bruta × Base Presumida - (IRPJ + CSLL + PIS + COFINS)
+        // =========================================================
+        var receitaBruta = self.getFloatValue($('#receitaBruta').val());
+        var percBase = self.getFloatValue($('#basePresumida').val());
         var valorProposto = self.getFloatValue($('#valorProposto').val());
+        var regime = $('#regimeTributario').val();
 
-        // 3. Aplica a Regra Tributária
-        if (valorProposto > 0 && valorProposto > limiteIsento) {
-            $('#alertaTributacao').show(); // Mostra o alerta de tributação
+        var limiteDistribuicao = 0;
 
-            var excedente = valorProposto - limiteIsento;
-            var irrf = excedente * 0.10; // Alíquota de 10%
-            var liquidoPagar = valorProposto - irrf;
+        // Se for Lucro Presumido, o motor matemático entra em ação
+        if (regime === "Lucro Presumido" && receitaBruta > 0 && percBase > 0) {
+            var baseCalculo = receitaBruta * (percBase / 100);
 
-            $('#valorExcedente').val(self.getMoneyString(excedente));
-            $('#valorIRRF').val(self.getMoneyString(irrf));
-            $('#valorLiquidoPagar').val(self.getMoneyString(liquidoPagar));
-        } else if (valorProposto > 0 && valorProposto <= limiteIsento) {
-            $('#alertaTributacao').hide();
+            // Dedução de Impostos (Fórmula Completa da Lei 15.270/2025)
+            var irpj = baseCalculo * 0.15; // 15% sobre a base (Lucro Presumido padrão)
+            var csll = baseCalculo * 0.09; // 9% sobre a base (Lucro Presumido padrão)
+            var pis = receitaBruta * 0.0065; // 0,65% sobre receita bruta
+            var cofins = receitaBruta * 0.03; // 3% sobre receita bruta
 
-            $('#valorExcedente').val('0,00');
-            $('#valorIRRF').val('0,00');
-            $('#valorLiquidoPagar').val(self.getMoneyString(valorProposto)); // Recebe 100%
+            var totalImpostos = irpj + csll + pis + cofins;
+            limiteDistribuicao = baseCalculo - totalImpostos;
+
+            console.log("[LIMITE DISTRIBUIÇÃO] Base: " + baseCalculo.toFixed(2) + " | Impostos: " + totalImpostos.toFixed(2) + " | Limite: " + limiteDistribuicao.toFixed(2));
+        } else if (regime === "RET" && receitaBruta > 0) {
+            var ret = receitaBruta * 0.03; // 3% sobre a receita
+            limiteDistribuicao = receitaBruta - ret;
         }
 
-        var somaParticipacao = 0;
+        // ALERTA 1: Valor Proposto excede o Limite Contábil?
+        if (limiteDistribuicao > 0 && valorProposto > limiteDistribuicao) {
+            $('#alertaLimite').html('<strong>⚠ Valor excede o Limite Permitido (R$ ' + self.getMoneyString(limiteDistribuicao) + ')</strong>');
+            $('#alertaLimite').show();
+        } else if (limiteDistribuicao > 0) {
+            $('#alertaLimite').hide();
+        }
 
-        // Motor Matemático: Valida Distribuição Desproporcional ou Proporcional (Capital)
+        // =========================================================
+        // 2. CÁLCULO DE ISENÇÃO E TRIBUTAÇÃO (Lei 15.270/2025)
+        // Limite: R$ 50.000,00/mês
+        // Tributação: 10% sobre excedente
+        // =========================================================
+
+        // Limite de Isenção Mensal (Fixo)
+        var limiteIsentoMensal = 50000.00;
+
+        // Captura valor proposto (já validado acima)
+        var acumuladoAno = self.getFloatValue($('#dashSaldoAntecipacao').val());
+
+        // Calcula saldo de isenção disponível no ano
+        var saldoIsencaoRestante = limiteIsentoMensal - acumuladoAno;
+        if (saldoIsencaoRestante < 0) saldoIsencaoRestante = 0; // Teto já esgotado
+
+        if ($('#limiteIsento').length) {
+            $('#limiteIsento').val(self.getMoneyString(saldoIsencaoRestante));
+        }
+
+        // =========================================================
+        // 3. APLICAÇÃO DA REGRA TRIBUTÁRIA
+        // =========================================================
+        var valorExcedente = 0;
+        var valorIRRF = 0;
+        var valorLiquidoPagar = valorProposto;
+        var statusTributacao = "ISENTO";
+
+        // SÓ TRIBUTA se a Lei 15.270/2025 está em vigor (atas de Jan/2026+)
+        if (aplicaLei15270 && valorProposto > 0) {
+
+            // Primeira Camada: Valor Proposto vs. Saldo de Isenção Mensal
+            if (valorProposto <= saldoIsencaoRestante) {
+                // Tudo isento
+                valorExcedente = 0;
+                valorIRRF = 0;
+                valorLiquidoPagar = valorProposto;
+                statusTributacao = "ISENTO (dentro do limite mensal)";
+            } else {
+                // Parte entra no limite isento, parte é tributada
+                var parteIsenta = saldoIsencaoRestante;
+                valorExcedente = valorProposto - saldoIsencaoRestante;
+                valorIRRF = valorExcedente * 0.10; // Alíquota de 10% conforme Lei
+                valorLiquidoPagar = parteIsenta + (valorExcedente - valorIRRF);
+                statusTributacao = "TRIBUTADO (excedente de R$ " + valorExcedente.toFixed(2) + ")";
+            }
+
+            console.log("[TRIBUTAÇÃO] Status: " + statusTributacao + " | IRRF: R$ " + valorIRRF.toFixed(2));
+        } else if (!aplicaLei15270 && valorProposto > 0) {
+            // Lei não está em vigor (atas até Dez/2025)
+            valorExcedente = 0;
+            valorIRRF = 0;
+            valorLiquidoPagar = valorProposto;
+            statusTributacao = "ISENTO (Lei 15.270/2025 não aplicável para Atas até Dez/2025)";
+            console.log("[TRIBUTAÇÃO] Ata anterior a Lei 15.270/2025 - " + statusTributacao);
+        }
+
+        // Injeta os valores calculados na tela
+        $('#valorExcedente').val(self.getMoneyString(valorExcedente));
+        $('#valorIRRF').val(self.getMoneyString(valorIRRF));
+        $('#valorLiquidoPagar').val(self.getMoneyString(valorLiquidoPagar));
+
+        // Mostra/Oculta alerta de tributação
+        if (valorIRRF > 0) {
+            $('#alertaTributacao').show().html('<strong>⚠ Tributação Aplicada:</strong> ' + statusTributacao);
+        } else {
+            $('#alertaTributacao').html('<strong>✓ Isento:</strong> ' + statusTributacao).show();
+        }
+
+        // =========================================================
+        // 4. RATEIO ENTRE SÓCIOS (Distribuição Proporcional ou Desproporcional)
+        // =========================================================
+        var somaParticipacao = 0;
+        var valorTotalRateado = 0;
+
         $("input[id^='percDistSocio___']").each(function () {
-            
-            // CORREÇÃO: O índice correto do split no Fluig é sempre 1
-            var linha = $(this).attr('id').split('___')[3];
-            
-            // LOG 1: Identifica em qual linha da tabela o loop está operando
-            console.log("[DEBUG RATEIO] Lendo Linha: " + linha);
+            var linha = $(this).attr('id').split('___')[1];
 
             var percDist = self.getFloatValue($("#percDistSocio___" + linha).val());
-            var percCap  = self.getFloatValue($("#percCapitalSocio___" + linha).val());
-            
-            // LOG 2: Mostra os valores capturados na tela
-            console.log("[DEBUG RATEIO] Linha " + linha + " | % Dist: " + percDist + " | % Capital: " + percCap);
+            var percCap = self.getFloatValue($("#percCapitalSocio___" + linha).val());
 
             // Lógica de Fallback: Se preencheu % de Distribuição, usa ele. Se não, usa o % de Capital.
             var percentualBase = (percDist > 0) ? percDist : percCap;
 
             if (percentualBase > 0 && valorProposto > 0) {
-                // Calcula o valor a receber deste sócio e injeta na tela (readonly)
-                var valorReceber = valorProposto * (percentualBase / 100);
-                
-                // LOG 3: Mostra o valor financeiro final antes de injetar no HTML
-                console.log("[DEBUG RATEIO] Linha " + linha + " | Valor Proposto: " + valorProposto + " * " + percentualBase + "% = R$ " + valorReceber);
-                
+                // Calcula o valor a receber deste sócio (sobre o líquido, após tributação)
+                var valorReceber = valorLiquidoPagar * (percentualBase / 100);
                 $("#valorSocio___" + linha).val(self.getMoneyString(valorReceber));
+
+                // Se há tributação, injeta também os campos de IRRF e Líquido por sócio (se existirem)
+                if (valorIRRF > 0) {
+                    var irrfSocio = valorIRRF * (percentualBase / 100);
+                    if ($("#valorIRRF_Socio___" + linha).length) {
+                        $("#valorIRRF_Socio___" + linha).val(self.getMoneyString(irrfSocio));
+                    }
+                }
+
                 somaParticipacao += percentualBase;
+                valorTotalRateado += valorReceber;
             } else {
-                // Se zerado, limpa o campo financeiro
                 $("#valorSocio___" + linha).val('0,00');
             }
         });
 
+        console.log("[RATEIO] Soma de Participação: " + somaParticipacao.toFixed(2) + "% | Total Rateado: R$ " + valorTotalRateado.toFixed(2));
+
         // Validação visual de fechamento dos 100%
         if (somaParticipacao !== 100 && somaParticipacao > 0) {
-            $('#alertaParticipacao').show(); // Certifique-se de ter essa div de alerta no seu HTML, ou omita.
+            $('#alertaParticipacao').show().html('<strong>⚠ Soma de Participação: ' + somaParticipacao.toFixed(2) + '% (Deve ser 100%)</strong>');
         } else {
             $('#alertaParticipacao').hide();
+        }
+
+        // =========================================================
+        // 5. INJEÇÃO DE METADADOS PARA AUDITORIA E WORKFLOW
+        // =========================================================
+        $('#statusTributacao').val(statusTributacao);
+        $('#dataAtaCalculo').val(dataAta);
+        $('#aplicaLei15270').val(aplicaLei15270 ? 'SIM' : 'NAO');
+    },
+
+    // 6. Dashboards Globais (Consultas Analíticas via DatasetFactory)
+    carregarDashboards: function () {
+        var self = this; // Para manter o contexto dentro dos callbacks
+        console.log("[DEBUG DASHBOARD] Iniciando carga de dashboards analíticos...");
+
+        try {
+            // =========================================================
+            // CONSULTA 1: Solicitações "Em Andamento"
+            // Lemos o dataset interno do Fluig (workflowProcess)
+            // =========================================================
+            var c1 = DatasetFactory.createConstraint("processId", "Distribuicao_Dividendos", "Distribuicao_Dividendos", ConstraintType.MUST);
+            var c2 = DatasetFactory.createConstraint("active", "true", "true", ConstraintType.MUST);
+            var dsWorkflow = DatasetFactory.getDataset("workflowProcess", null, new Array(c1, c2), null);
+
+            var qtdAndamento = (dsWorkflow != null && dsWorkflow.values != null) ? dsWorkflow.values.length : 0;
+            $("#dashSolicitacoesAndamento").val(qtdAndamento);
+
+            // =========================================================
+            // CONSULTA 2: Posições Financeiras (Saldos)
+            // Lemos o histórico do dataset do próprio formulário
+            // =========================================================
+            // Nota: O nome do dataset geralmente é o mesmo ID do Processo/Formulário
+            var dsForm = DatasetFactory.getDataset("Distribuicao_Dividendos", null, null, null);
+
+            var anoAtualFormulario = $("#anoReferencia").val();
+
+            var saldoAntecipacao = 0;
+            var dividendosPagos = 0;
+            var dividendosAPagar = 0;
+
+            if (dsForm != null && dsForm.values != null && dsForm.values.length > 0) {
+                for (var i = 0; i < dsForm.values.length; i++) {
+                    var registro = dsForm.values[i];
+                    var anoRegistro = registro["anoReferencia"] || "";
+                    // Captura o valor financeiro daquela solicitação no banco
+                    var valorTotal = self.getFloatValue(registro["valorProposto"]);
+
+                    // Captura o status e a origem para aplicar a regra de negócio da Engenharia
+                    var status = registro["statusIntegracaoRM"] || "";
+                    var origem = registro["origemLucro"] || "";
+
+                    if (anoRegistro === anoAtualFormulario) {
+                        var valorTotal = self.getFloatValue(registro["valorProposto"]);
+                        var status = registro["statusIntegracaoRM"] || "";
+                        var origem = registro["origemLucro"] || "";
+
+                        // REGRA 1: Antecipação (Lucro Corrente já integrado, mas que ainda não virou Ata final de Dezembro)
+                        if (origem === "corrente" && status === "INTEGRADO_SUCESSO") {
+                            saldoAntecipacao += valorTotal;
+                        }
+                        // REGRA 2: Dividendos Pagos (O Fluxo Financeiro já liquidou tudo)
+                        else if (status === "PAGAMENTO_CONCLUIDO") {
+                            dividendosPagos += valorTotal;
+                        }
+                        // REGRA 3: Dividendos a Pagar (Ata assinada e provisionada, mas o banco ainda não pagou)
+                        else if (status === "INTEGRADO_SUCESSO" && origem !== "corrente") {
+                            dividendosAPagar += valorTotal;
+                        }
+                    }
+                }
+            }
+
+            // Injeta os totais formatados na nossa "Vitrine" (HTML)
+            $("#dashSaldoAntecipacao").val(self.getMoneyString(saldoAntecipacao));
+            $("#dashDividendosPagos").val(self.getMoneyString(dividendosPagos));
+            $("#dashDividendosPagar").val(self.getMoneyString(dividendosAPagar));
+
+            console.log("[DASHBOARD] Totais carregados e calculados com sucesso!");
+
+        } catch (e) {
+            console.error("[DASHBOARD] Falha ao consultar Datasets do Servidor: ", e);
         }
     }
 };
@@ -375,6 +584,9 @@ function fnWdkAddChild(tableName) {
 // Função nativa acionada automaticamente quando o usuário escolhe um item no Zoom
 function setSelectedZoomItem(selectedItem) {
     var inputId = selectedItem.inputId;
+
+    console.log("[DEBUG ZOOM] O campo " + inputId + " foi selecionado!");
+    console.log("[DEBUG ZOOM] Pacote de dados recebido: ", selectedItem);
 
     // 1. Filtro em Cascata (Empresa/Filial -> Centro de Custos)
     if (inputId == "empresaFilial") {
@@ -478,7 +690,7 @@ function setZoomData(instance, value) {
 
 /* function limparLinhaSocio(elementoClicado) {
     // Descobre o número da linha a partir do botão clicado
-    var linha = $(elementoClicado).closest('tr').find('input[id^="nomeSocio___"]').attr('id').split('___')[3];
+    var linha = $(elementoClicado).closest('tr').find('input[id^="nomeSocio___"]').attr('id').split('___')[1];
     
     // 1. Limpa o campo ZOOM do sócio programaticamente
     if (window["nomeSocio___" + linha]) {

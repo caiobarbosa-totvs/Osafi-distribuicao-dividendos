@@ -10,9 +10,9 @@ function createDataset(fields, constraints, sortFields) {
 
 
     // 2. Parâmetros Oficiais do RM 
-    var codSentenca  = 'FLUIG.016'; // Sentença oficial mantida
-    var codAplicacao = 'T';         // Sistema global (Oficial)
-    var codColigada  = '0';         // Traz todas as coligadas (Oficial)
+    var codSentenca  = "FLUIG.016"; // Sentença oficial mantida
+    var codAplicacao = "T";         // Sistema global (Oficial)
+    var codColigada  = 0;         // Traz todas as coligadas (Oficial)
 
     // Campos que o motor genérico vai extrair do XML
     var campos = new Array("CODCOLIGADA", "NOME", "CNPJ", "ATIVO");
@@ -24,17 +24,18 @@ function createDataset(fields, constraints, sortFields) {
 
     try {
         // 3. Chamada REAL utilizando nossa Camada de Abstração (Bate no RM de verdade)
-        var datasetRM = DatasetFactory.getDataset("ds_dividendos_generic_rm_sql", campos, params, null);
+        var datasetRM = DatasetFactory.getDataset("ds_generic_rm_sql", campos, params, null);
 
         if (datasetRM != null && datasetRM.rowsCount > 0) {
             for (var i = 0; i < datasetRM.rowsCount; i++) {
+	
+				var ativo       = datasetRM.getValue(i, "ATIVO"); 
                 if (ativo == "T") {
               
                 // Extração dos dados vindos do banco de dados
 	                var retColigada = datasetRM.getValue(i, "CODCOLIGADA");
 	                var nome        = datasetRM.getValue(i, "NOME");
 	                var cnpj        = datasetRM.getValue(i, "CNPJ");
-	                var ativo       = datasetRM.getValue(i, "ATIVO");                            
                     var campoZoom = retColigada + " - " + nome;
 
                     dataset.addRow(new Array(retColigada, nome, cnpj, ativo, campoZoom));

@@ -1,0 +1,66 @@
+<html>
+<head>
+    <!-- Importação das bibliotecas oficiais do Fluig Style Guide -->
+    <link type="text/css" rel="stylesheet" href="/style-guide/css/fluig-style-guide.min.css"/>
+    <script type="text/javascript" src="/portal/resources/js/jquery/jquery.js"></script>
+    <script type="text/javascript" src="/portal/resources/js/jquery/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="/portal/resources/js/mustache/mustache-min.js"></script>
+    <script type="text/javascript" src="/style-guide/js/fluig-style-guide.min.js" charset="utf-8"></script>
+</head>
+<body>
+    <!-- A classe fluig-style-guide garante a aplicação do CSS padronizado -->
+    <div class="fluig-style-guide">
+        
+        <!-- Todo formulário Fluig deve estar dentro de uma tag <form> com atributo name -->
+        <form name="formMetaDividendos" role="form">
+            
+            <div class="panel panel-primary" style="margin: 20px;">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="flaticon flaticon-document-valid icon-sm"></i> Metadados: Ata de Dividendos
+                    </h3>
+                </div>
+                
+                <div class="panel-body">
+                    <!-- LINHA 1: Tipo, Período e Valor -->
+                    <div class="row">
+                        <!-- Campo: Tipo de Ata -->
+                        <div class="col-md-4 form-group">
+                            <label for="tipoAta">Tipo de Ata</label>
+                            <select name="tipoAta" id="tipoAta" class="form-control">
+                                <option value="">Selecione...</option>
+                                <option value="DISTRIBUICAO_DIRETA">Distribuição Direta (Lucro Fechado)</option>
+                                <option value="ANTECIPACAO">Deliberação de Antecipação (Corrente)</option>
+                                <option value="CONSOLIDACAO">Consolidação de Antecipações (Fechamento)</option>
+                            </select>
+                        </div>
+
+                        <!-- Campo: Período -->
+                        <div class="col-md-4 form-group">
+                            <label for="periodoAta">Período de Referência</label>
+                            <input type="text" name="periodoAta" id="periodoAta" class="form-control" placeholder="Ex: 01/01/2025 a 31/12/2025">
+                        </div>
+
+                        <!-- Campo: Valor -->
+                        <div class="col-md-4 form-group">
+                            <label for="valorTotal">Valor Total (R$)</label>
+                            <!-- O atributo mask do Fluig formata o número como moeda automaticamente -->
+                            <input type="text" name="valorTotal" id="valorTotal" class="form-control" mask="#.##0,00" placeholder="0,00">
+                        </div>
+                    </div>
+
+                    <!-- LINHA 2: Sócios -->
+                    <div class="row">
+                        <!-- Campo: Sócios -->
+                        <div class="col-md-12 form-group">
+                            <label for="sociosContemplados">Sócios Contemplados</label>
+                            <textarea name="sociosContemplados" id="sociosContemplados" class="form-control" rows="3" placeholder="Informe os nomes, razão social ou CPF/CNPJ dos sócios contemplados nesta Ata..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </form>
+    </div>
+</body>
+</html>

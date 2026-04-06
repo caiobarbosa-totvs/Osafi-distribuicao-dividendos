@@ -13,6 +13,12 @@
     <script src="/style-guide/js/fluig-style-guide.min.js"></script>
     <script type="text/javascript" src="/webdesk/vcXMLRPC.js"></script>
 
+    <!-- ======================================================= -->
+    <!-- MOTOR DE TEMPLATE PDF (Fábrica de PDFs - pdfmake)       -->
+    <!-- ======================================================= -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
     <!-- Arquivos Customizados (Criaremos nas próximas etapas) -->
     <link rel="stylesheet" type="text/css" href="custom.css">
 </head>
@@ -31,14 +37,28 @@
             <!-- <input type="hidden" id="statusAssinaturaAta" name="statusAssinaturaAta" value=""> -->
             <input type="hidden" id="possuiSaldoRemanescente" name="possuiSaldoRemanescente" value="">
 
-            <!-- Motor Oculto para Consulta de Coligadas via JS -->
+            <!-- Campos Ocultos para Auditoria de Tributação (Lei 15.270/2025) -->
+            <input type="hidden" id="statusTributacao" name="statusTributacao" value="">
+            <input type="hidden" id="dataAtaCalculo" name="dataAtaCalculo" value="">
+            <input type="hidden" id="aplicaLei15270" name="aplicaLei15270" value="">
+            <input type="hidden" id="acumuladoMes" name="acumuladoMes" value="0">
+
+            <!-- Motor Oculto para Consulta de Sócios via JS -->
             <div style="display:none;">
-                <input type="zoom" class="form-control" name="zoomColigadasOculto" id="zoomColigadasOculto" data-zoom="{
-                    'displayKey': 'CNPJ',
-                    'datasetId': 'ds_dividendos_rm_filial',
+                <input type="zoom" class="form-control" name="zoomSociosOculto" id="zoomSociosOculto" data-zoom="{
+                    'displayKey': 'CAMPO_ZOOM',
+                    'datasetId': 'ds_dividendos_rm_socio',
                     'fields': [
-                        { 'field': 'CNPJ', 'label': 'CNPJ' },
-                        { 'field': 'NOME', 'label': 'Razão Social', 'standard': 'true'}
+                        { 'field': 'CODIGO', 'label': 'Código' },
+                        { 'field': 'RAZAO_SOCIAL', 'label': 'Razão Social' },
+                        { 'field': 'CNPJ', 'label': 'CNPJ/CPF', 'standard': 'true'},
+                        { 'field': 'ATIVO', 'label': 'Ativo' },
+                        { 'field': 'STATUS_BLOQUEIO', 'label': 'Status Bloqueio' },
+                        { 'field': 'TIPO_PAGAMENTO', 'label': 'Tipo Pagamento' },
+                        { 'field': 'BANCO', 'label': 'Banco' },
+                        { 'field': 'AGENCIA', 'label': 'Agência' },
+                        { 'field': 'CONTA_CORRENTE', 'label': 'Conta Corrente' },
+                        { 'field': 'CHAVE_PIX', 'label': 'Chave PIX' }
                     ]
                 }">
             </div>
@@ -125,13 +145,13 @@
                             <div class="title">Distribuição por Sócio</div>
                         </div>
 
-                        <div id="step-av-controladoria" class="barraProgresso-step" data-step="4">
+                        <div id="step-av-controladoria" class="barraProgresso-step" data-step="3">
                             <div class="title">Avaliação Técnica - Controladoria</div>
                         </div>
 
-                        <div id="step-aprovacao-dir" class="barraProgresso-step" data-step="3">
+                        <div id="step-aprovacao-dir" class="barraProgresso-step" data-step="4">
                             <div class="title">Aprovação da Diretoria</div>
-                        </div>                        
+                        </div>
 
                         <div id="step-solicitacao-ata" class="barraProgresso-step" data-step="5">
                             <div class="title">Solicitação e Geração de Ata</div>
@@ -215,6 +235,8 @@
                                                                 <option value="Lucro Real">Lucro Real</option>
                                                                 <option value="Simples Nacional">Simples Nacional
                                                                 </option>
+                                                                <option value="RET">RET (Regime Especial de Tributação)
+                                                                </option>
                                                             </select>
                                                         </div>
                                                     </div>
@@ -271,7 +293,7 @@
                                                     <!-- Linha 3: Origem do Lucro -->
                                                     <div class="row">
                                                         <div class="form-group col-md-6">
-                                                            <label>Origem do Lucro <span
+                                                            <label>Origem do Lucro / Tipo de Operação <span
                                                                     class="text-danger">*</span></label>
                                                             <div class="radio">
                                                                 <label><input type="radio" name="origemLucro"
@@ -290,7 +312,12 @@
                                                                     Lucro já Deliberados em ATA (Baixa de
                                                                     Provisão)</label>
                                                             </div>
-
+                                                            <div class="radio">
+                                                                <label><input type="radio" name="origemLucro"
+                                                                        id="origemConsolidacao" value="consolidacao">
+                                                                    Consolidação de Antecipações (Fechamento de
+                                                                    Exercício)</label>
+                                                            </div>
                                                         </div>
                                                         <!-- Bloco Dinâmico: Aparece apenas se for Lucro já Deliberado -->
                                                         <div class="row col-ja-deliberado"
@@ -391,14 +418,14 @@
                                                             <input type="zoom" class="form-control"
                                                                 name="naturezaOrcamentaria" id="naturezaOrcamentaria"
                                                                 data-zoom="{
-                                                                'displayKey': 'NOME',
-                                                                'datasetId': 'ds_dividendos_rm_natureza',
-                                                                'maximumSelectionLength': '1',
-                                                                'placeholder': 'Selecione a Natureza...',
-                                                                'fields': [
-                                                                    { 'field': 'CODNAT', 'label': 'Código' },
-                                                                    { 'field': 'NOME', 'label': 'Nome', 'standard': 'true' }
-                                                                ]
+                                                                'displayKey': 'DESCRICAO',
+                                                                            'datasetId': 'DS_NATUREZA_ORCAMENTARIA_FLUIG_20',
+                                                                            'maximumSelectionLength': '1',
+                                                                            'placeholder': 'Nat. Orçamentária...',
+                                                                            'fields': [
+                                                                                { 'field': 'CODTBORCAMENTO', 'label': 'Código' },
+                       															{ 'field': 'DESCRICAO', 'label': 'Descrição', 'standard': 'true' }
+                                                                                ]
                                                             }">
                                                         </div>
 
@@ -492,14 +519,14 @@
                                                                         <input type="zoom" class="form-control"
                                                                             name="centroCustoSocio"
                                                                             id="centroCustoSocio" data-zoom="{
-                                                                            'displayKey': 'CAMPO_ZOOM',
+                                                                            'displayKey': 'NOME',
                                                                             'datasetId': 'ds_dividendos_rm_centro_custo',
                                                                             'maximumSelectionLength': '1',
-                                                                            'placeholder': 'C. Custo...',
+                                                                            'placeholder': 'Selecione o Centro de Custo...',
                                                                             'fields': [
-                                                                                { 'field': 'CODCCUSTO', 'label': 'Código', 'visable': 'false' },
-                                                                                { 'field': 'NOME', 'label': 'Nome', 'visable': 'false'},
-                                                                                { 'field': 'CAMPO_ZOOM', 'label': 'Coligada', 'standard': 'true' }                                                                            ]
+                                                                                { 'field': 'CODCCUSTO', 'label': 'Código' },
+                                                                                { 'field': 'NOME', 'label': 'Nome', 'standard': 'true' }
+                                                                            ]                                                                   
                                                                         }">
                                                                     </td>
                                                                     <!-- Novo Zoom: Natureza Orçamentária da Linha -->
@@ -513,8 +540,8 @@
                                                                             'placeholder': 'Nat. Orçamentária...',
                                                                             'fields': [
                                                                                 { 'field': 'CODTBORCAMENTO', 'label': 'Código' },
-                                                                                { 'field': 'DESCRICAO', 'label': 'Descrição' },
-                                                                                { 'field': 'CODNAT', 'label': 'Código Natureza', 'visable': 'false' }]
+                        														{ 'field': 'DESCRICAO', 'label': 'Descrição', 'standard': 'true' }
+                                                                             ]
                                                                         }">
                                                                     </td>
 
@@ -739,6 +766,11 @@
                                                                         id="checkLei15270" value="sim"> Conformidade
                                                                     Tributária (Lei 15.270/2025)</label>
                                                             </div>
+                                                            <div class="checkbox">
+                                                                <label><input type="checkbox" name="checkEstatuto"
+                                                                        id="checkEstatuto" value="sim"> Conformidade com
+                                                                    Lei 6.404/76 e Estatuto Social</label>
+                                                            </div>
                                                         </div>
                                                     </div>
 
@@ -904,6 +936,23 @@
                                                             <textarea class="form-control" name="justificativaAta"
                                                                 id="justificativaAta" rows="3"
                                                                 placeholder="Detalhes para constar no documento legal..."></textarea>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="row">
+                                                        <div class="form-group col-md-12 text-center"
+                                                            style="margin-top: 15px; margin-bottom: 10px;">
+                                                            <!-- Campo invisível que alimentará o afterTaskSave.js -->
+                                                            <input type="hidden" name="idAnexoPDF" id="idAnexoPDF"
+                                                                value="">
+
+                                                            <!-- O botão que o Planejamento Financeiro vai clicar -->
+                                                            <button type="button" class="btn btn-primary btn-lg"
+                                                                id="btnGerarAta" onclick="gerarAtaPDF()">
+                                                                <span
+                                                                    class="fluigicon fluigicon-file-pdf icon-sm"></span>
+                                                                Visualizar e Gerar Ata PDF
+                                                            </button>
                                                         </div>
                                                     </div>
 
@@ -1094,6 +1143,7 @@
     <!-- Import do JS Customizado (Criaremos na etapa de validações) -->
     <script type="text/javascript"
         src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script type="text/javascript" src="js-pdf-print.js"></script>
     <script type="text/javascript" src="distribuicao_dividendos.js"></script>
 </body>
 

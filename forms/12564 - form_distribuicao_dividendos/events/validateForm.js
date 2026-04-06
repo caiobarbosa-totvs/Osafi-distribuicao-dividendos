@@ -40,7 +40,7 @@ function validateForm(form) {
     // ----------------------------------------------------------------------
     if (atividadeAtual === INICIO || atividadeAtual === INICIALIZACAO || atividadeAtual === PLANEJADOR_FINANCEIRO) {
 
-        // 1.1 Validação dos Campos Fixos
+    // 1.1 Validação dos Campos Fixos
         if (form.getValue("anoReferencia") == "") {
             msgErro += "- O campo 'Ano de Referência' é obrigatório.<br>";
         }
@@ -81,6 +81,50 @@ function validateForm(form) {
             }
         }
 
+        // =========================================================
+        // 1.1.1 VALIDAÇÕES DE TRIBUTAÇÃO (Lei 15.270/2025)
+        // =========================================================
+        
+        // Determine a data da Ata
+        var dataAta = form.getValue("dataAta") || form.getValue("dataAtaAnterior") || new Date().toISOString().split('T')[0];
+        var anoAta = parseInt(dataAta.split('-')[0]);
+        var mesAta = parseInt(dataAta.split('-')[1]);
+        
+        // Regra de Transição: determina se Lei 15.270/2025 se aplica
+        var aplicaLei15270 = (anoAta > 2025) || (anoAta === 2025 && mesAta > 12);
+        
+        if (aplicaLei15270) {
+            // Lei 15.270/2025 está em vigor para Atas de Jan/2026+
+            
+            // 1. Verificar se há cálculo de IRRF realizado
+            var valorIRRF = getFloatValue(form.getValue("valorIRRF"));
+            if (valorIRRF === undefined || valorIRRF === null || valorIRRF === 0) {
+                msgErro += "- Para Atas emitidas a partir de Janeiro/2026, o cálculo de tributação (Lei 15.270/2025) não foi realizado. Verifique o valor proposto versus o limite de R$ 50.000/mês.<br>";
+            }
+            
+            // 2. Validar que o limite de isenção foi considerado
+            var limiteIsento = getFloatValue(form.getValue("limiteIsento"));
+            if (limiteIsento === undefined || limiteIsento === null || limiteIsento < 0) {
+                msgErro += "- Saldo de isenção (Lei 15.270/2025) não foi calculado. Verifique o acumulado do mês.<br>";
+            }
+            
+            // 3. Validar que valor líquido foi calculado corretamente
+            var valorProposto = getFloatValue(form.getValue("valorProposto"));
+            var valorLiquidoPagar = getFloatValue(form.getValue("valorLiquidoPagar"));
+            if (valorLiquidoPagar === undefined || valorLiquidoPagar === null || valorLiquidoPagar === 0) {
+                msgErro += "- Valor Líquido a Pagar não foi calculado. Revise a tributação (Lei 15.270/2025).<br>";
+            }
+            if (valorLiquidoPagar > valorProposto) {
+                msgErro += "- Erro de cálculo: Valor Líquido a Pagar não pode ser maior que o Valor Proposto.<br>";
+            }
+        } else {
+            // Lei 15.270/2025 NÃO está em vigor para Atas até Dez/2025 (Isenção Integral)
+            var valorIRRF_Isento = getFloatValue(form.getValue("valorIRRF"));
+            if (valorIRRF_Isento > 0) {
+                msgErro += "- Atas até Dezembro/2025 são isentas de tributação. O campo de IRRF deve estar zerado. Revise a data da Ata.<br>";
+            }
+        }
+
         // 1.2 Validação da Tabela Pai x Filho (Distribuição por Sócio) e Bloqueio Matemático
         var indicesSocios = form.getChildrenIndexes("tabela_socios");
 
@@ -102,9 +146,9 @@ function validateForm(form) {
                 if (form.getValue("nomeSocio___" + linha) == "") {
                     msgErro += "- O Sócio da linha " + numeroLinhaReal + " não foi informado.<br>";
                 }
-                if (form.getValue("centroCustoSocio___" + linha) == "") {
+                /*if (form.getValue("centroCustoSocio___" + linha) == "") {
                     msgErro += "- O Centro de Custo (Rateio) da linha " + numeroLinhaReal + " é obrigatório.<br>";
-                }
+                }*/
                 if (form.getValue("naturezaOrcamentariaSocio___" + linha) == "") {
                     msgErro += "- A Natureza Orçamentária do sócio na linha " + numeroLinhaReal + " é obrigatória.<br>";
                 }
@@ -151,126 +195,142 @@ function validateForm(form) {
     // ----------------------------------------------------------------------
     else if (atividadeAtual === AVALIACAO_TECNICA) {
         var decisaoControladoria = form.getValue("decisaoControladoria");
+        var origemLucro = form.getValue("origemLucro"); // Lê a origem para saber o que cobrar
 
         if (decisaoControladoria == null || decisaoControladoria == "") {
             msgErro += "- É obrigatório selecionar a Decisão da Controladoria.<br>";
         }
 
         if (decisaoControladoria == "Aprovar" || decisaoControladoria == "Aprovar com Ressalvas") {
-            // Exige os 3 checks Contábeis e os 4 checks Fiscais da Lei 15.270/2025
-            if (form.getValue("checkDRE") != "sim" ||
-                form.getValue("checkReserva") != "sim" ||
-                form.getValue("checkSaldo") != "sim" ||
-                form.getValue("checkRegime") != "sim" ||
-                form.getValue("checkDctf") != "sim" ||
-                form.getValue("checkLimite50k") != "sim" ||
-                form.getValue("checkLei15270") != "sim") {
-
-                msgErro += "- Para aprovar a proposta, todos os 7 itens do Checklist (Grupos Contábil e Fiscal) devem estar marcados e validados.<br>";
+            
+            // 1. VALIDAÇÕES GLOBAIS (Fiscais e Legais obrigatórias para TODOS)
+            if (form.getValue("checkRegime") != "sim" || 
+                form.getValue("checkDctf") != "sim" || 
+                form.getValue("checkLimite50k") != "sim" || 
+                form.getValue("checkLei15270") != "sim" || 
+                form.getValue("checkEstatuto") != "sim") {
+                
+                msgErro += "- Para aprovar, todos os 5 itens Fiscais e de Conformidade Legal devem estar marcados como 'sim'.<br>";
             }
 
-            if (decisaoControladoria == "Rejeitar" || decisaoControladoria == "Aprovar com Ressalvas") {
-                if (form.getValue("parecerControladoria") == null || form.getValue("parecerControladoria") == "") {
-                    msgErro += "- O Parecer da Controladoria é obrigatório ao Rejeitar ou Aprovar com Ressalvas.<br>";
+            // 2. VALIDAÇÕES ESPECÍFICAS (Contábeis divididas por tipo)
+            if (origemLucro == "corrente") {
+                // Cenário: ANTECIPAÇÃO DE DIVIDENDOS
+                if (form.getValue("checkDRE") != "sim") {
+                    msgErro += "- Na Antecipação, a validação do Balancete Intermediário (Grupo Contábil) é obrigatória.<br>";
                 }
-            }
-        }
-
-        // ----------------------------------------------------------------------
-        // ETAPA 4: SOLICITAÇÃO E GERAÇÃO DE ATA
-        // ----------------------------------------------------------------------
-        else if (atividadeAtual === SOLICITACAO_ATA) {
-            if (form.getValue("dataAta") == "") {
-                msgErro += "- A 'Data da Ata' é obrigatória.<br>";
-            }
-            if (form.getValue("localAta") == "") {
-                msgErro += "- O 'Local' da Ata é obrigatório.<br>";
-            }
-            if (form.getValue("horarioAta") == "") {
-                msgErro += "- O 'Horário' da Ata é obrigatório.<br>";
-            }
-            if (form.getValue("periodoReferenciaAta") == "") {
-                msgErro += "- O 'Período de Referência' é obrigatório.<br>";
-            }
-            if (form.getValue("resultadoLiquido") == "") {
-                msgErro += "- O 'Resultado Líquido do Exercício' é obrigatório.<br>";
-            }
-            if (form.getValue("totalDisponivel") == "") {
-                msgErro += "- O 'Total Disponível para Distribuição' é obrigatório.<br>";
-            }
-            if (form.getValue("assinaturaRepresentante") != "sim") {
-                msgErro += "- É obrigatório marcar a assinatura do Representante Legal.<br>";
-            }
-            if (form.getValue("justificativaAta") == null || form.getValue("justificativaAta") == "") {
-                msgErro += "- A 'Justificativa da Distribuição e Impacto' é obrigatória.<br>";
-            }
-        }
-
-        // ----------------------------------------------------------------------
-        // ETAPA 5: PROGRAMAÇÃO DE PAGAMENTOS (Trilhas de Antecipação e Regular)
-        // ----------------------------------------------------------------------
-        else if (atividadeAtual === PROGRAMACAO_PAGAMENTOS || atividadeAtual === PROGRAMACAO_PAGAMENTO_REGULAR) {
-
-            var indicesPagamentos = form.getChildrenIndexes("tabela_pagamentos");
-
-            if (indicesPagamentos.length == 0) {
-                msgErro += "- É obrigatório adicionar pelo menos uma programação de pagamento na tabela.<br>";
             } else {
-                for (var j = 0; j < indicesPagamentos.length; j++) {
-                    var linhaPag = indicesPagamentos[j];
-                    var numeroLinhaRealPag = j + 1;
-
-                    if (form.getValue("pagDataProgramada___" + linhaPag) == "") {
-                        msgErro += "- A 'Data Programada' da linha " + numeroLinhaRealPag + " não foi informada.<br>";
-                    }
-                    if (form.getValue("pagStatus___" + linhaPag) == null || form.getValue("pagStatus___" + linhaPag) == "") {
-                        msgErro += "- O 'Status' da programação na linha " + numeroLinhaRealPag + " é obrigatório.<br>";
-                    }
-                }
-            }
-        }
-        else if (atividadeAtual === ANEXACAO_COMPROVANTE || atividadeAtual === CONCILIACAO_FINANCEIRA_REGULAR || atividadeAtual === CONCILIACAO_CONTABIL) {
-
-            var indicesPagamentos = form.getChildrenIndexes("tabela_pagamentos");
-
-            for (var k = 0; k < indicesPagamentos.length; k++) {
-                var linhaVal = indicesPagamentos[k];
-                var numeroVal = k + 1;
-
-                if (form.getValue("pagStatus___" + linhaVal) !== "Liquidado") {
-                    msgErro += "- Para avançar nas etapas de conciliação, todos os status na linha " + numeroVal + " devem estar como 'Liquidado'.<br>";
-                }
-                if (form.getValue("pagDataEfetiva___" + linhaVal) == "") {
-                    msgErro += "- A 'Data Efetiva (Qive)' da linha " + numeroVal + " é obrigatória para comprovação.<br>";
-                }
-                if (form.getValue("pagProtocolo___" + linhaVal) == "") {
-                    msgErro += "- O 'Protocolo Bancário' da linha " + numeroVal + " é obrigatório para auditoria.<br>";
-                }
-            }
-
-            // Validação do Gateway Final
-            if (atividadeAtual === CONCILIACAO_CONTABIL) {
-
-                // Exige o Checklist
-                if (form.getValue("auditAta") != "sim" || form.getValue("auditValores") != "sim" || form.getValue("auditImpostos") != "sim") {
-                    msgErro += "- Para encerrar o processo, todos os itens do Checklist de Auditoria devem ser validados.<br>";
-                }
-
-                if (form.getValue("decisaoSaldoFinal") == null || form.getValue("decisaoSaldoFinal") == "") {
-                    msgErro += "- A auditoria exige que seja informada se há Saldo Remanescente para encerrar o processo.<br>";
+                // Cenário: DISTRIBUIÇÃO E CONSOLIDAÇÃO
+                if (form.getValue("checkDRE") != "sim" || 
+                    form.getValue("checkReserva") != "sim" || 
+                    form.getValue("checkSaldo") != "sim") {
+                    
+                    msgErro += "- Na Distribuição, a validação do Balanço, Saldos e Reservas de Lucro (Grupo Contábil) são obrigatórias.<br>";
                 }
             }
         }
 
-        // ----------------------------------------------------------------------
-        // DISPARO DO ALERTA E BLOQUEIO DO FORMULÁRIO
-        // ----------------------------------------------------------------------
-        if (msgErro !== "") {
-            throw "<br><br><strong>Atenção! Verifique os seguintes campos obrigatórios antes de enviar:</strong><br><br>" + msgErro;
+        if (decisaoControladoria == "Rejeitar" || decisaoControladoria == "Aprovar com Ressalvas") {
+            if (form.getValue("parecerControladoria") == null || form.getValue("parecerControladoria") == "") {
+                msgErro += "- O Parecer da Controladoria é obrigatório ao Rejeitar ou Aprovar com Ressalvas.<br>";
+            }
         }
     }
 
-    // ==========================================================================
+    // ----------------------------------------------------------------------
+    // ETAPA 4: SOLICITAÇÃO E GERAÇÃO DE ATA
+    // ----------------------------------------------------------------------
+    else if (atividadeAtual === SOLICITACAO_ATA) {
+        if (form.getValue("dataAta") == "") {
+            msgErro += "- A 'Data da Ata' é obrigatória.<br>";
+        }
+        if (form.getValue("localAta") == "") {
+            msgErro += "- O 'Local' da Ata é obrigatório.<br>";
+        }
+        if (form.getValue("horarioAta") == "") {
+            msgErro += "- O 'Horário' da Ata é obrigatório.<br>";
+        }
+        if (form.getValue("periodoReferenciaAta") == "") {
+            msgErro += "- O 'Período de Referência' é obrigatório.<br>";
+        }
+        if (form.getValue("resultadoLiquido") == "") {
+            msgErro += "- O 'Resultado Líquido do Exercício' é obrigatório.<br>";
+        }
+        if (form.getValue("totalDisponivel") == "") {
+            msgErro += "- O 'Total Disponível para Distribuição' é obrigatório.<br>";
+        }
+        if (form.getValue("assinaturaRepresentante") != "sim") {
+            msgErro += "- É obrigatório marcar a assinatura do Representante Legal.<br>";
+        }
+        if (form.getValue("justificativaAta") == null || form.getValue("justificativaAta") == "") {
+            msgErro += "- A 'Justificativa da Distribuição e Impacto' é obrigatória.<br>";
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // ETAPA 5: PROGRAMAÇÃO DE PAGAMENTOS (Trilhas de Antecipação e Regular)
+    // ----------------------------------------------------------------------
+    else if (atividadeAtual === PROGRAMACAO_PAGAMENTOS || atividadeAtual === PROGRAMACAO_PAGAMENTO_REGULAR) {
+
+        var indicesPagamentos = form.getChildrenIndexes("tabela_pagamentos");
+
+        if (indicesPagamentos.length == 0) {
+            msgErro += "- É obrigatório adicionar pelo menos uma programação de pagamento na tabela.<br>";
+        } else {
+            for (var j = 0; j < indicesPagamentos.length; j++) {
+                var linhaPag = indicesPagamentos[j];
+                var numeroLinhaRealPag = j + 1;
+
+                if (form.getValue("pagDataProgramada___" + linhaPag) == "") {
+                    msgErro += "- A 'Data Programada' da linha " + numeroLinhaRealPag + " não foi informada.<br>";
+                }
+                if (form.getValue("pagStatus___" + linhaPag) == null || form.getValue("pagStatus___" + linhaPag) == "") {
+                    msgErro += "- O 'Status' da programação na linha " + numeroLinhaRealPag + " é obrigatório.<br>";
+                }
+            }
+        }
+    }
+    else if (atividadeAtual === ANEXACAO_COMPROVANTE || atividadeAtual === CONCILIACAO_FINANCEIRA_REGULAR || atividadeAtual === CONCILIACAO_CONTABIL) {
+
+        var indicesPagamentos = form.getChildrenIndexes("tabela_pagamentos");
+
+        for (var k = 0; k < indicesPagamentos.length; k++) {
+            var linhaVal = indicesPagamentos[k];
+            var numeroVal = k + 1;
+
+            if (form.getValue("pagStatus___" + linhaVal) !== "Liquidado") {
+                msgErro += "- Para avançar nas etapas de conciliação, todos os status na linha " + numeroVal + " devem estar como 'Liquidado'.<br>";
+            }
+            if (form.getValue("pagDataEfetiva___" + linhaVal) == "") {
+                msgErro += "- A 'Data Efetiva (Qive)' da linha " + numeroVal + " é obrigatória para comprovação.<br>";
+            }
+            if (form.getValue("pagProtocolo___" + linhaVal) == "") {
+                msgErro += "- O 'Protocolo Bancário' da linha " + numeroVal + " é obrigatório para auditoria.<br>";
+            }
+        }
+
+        // Validação do Gateway Final
+        if (atividadeAtual === CONCILIACAO_CONTABIL) {
+
+            // Exige o Checklist
+            if (form.getValue("auditAta") != "sim" || form.getValue("auditValores") != "sim" || form.getValue("auditImpostos") != "sim") {
+                msgErro += "- Para encerrar o processo, todos os itens do Checklist de Auditoria devem ser validados.<br>";
+            }
+
+            if (form.getValue("decisaoSaldoFinal") == null || form.getValue("decisaoSaldoFinal") == "") {
+                msgErro += "- A auditoria exige que seja informada se há Saldo Remanescente para encerrar o processo.<br>";
+            }
+        }
+    }
+
+    // ----------------------------------------------------------------------
+    // DISPARO DO ALERTA E BLOQUEIO DO FORMULÁRIO
+    // ----------------------------------------------------------------------
+    if (msgErro !== "") {
+        throw "<br><br><strong>Atenção! Verifique os seguintes campos obrigatórios antes de enviar:</strong><br><br>" + msgErro;
+    }
+}
+// ==========================================================================
     // FUNÇÕES AUXILIARES DE BACK-END
     // ==========================================================================
 
@@ -283,4 +343,3 @@ function validateForm(form) {
         var valorLimpo = String(valorString).replace(/\./g, '').replace(',', '.');
         return parseFloat(valorLimpo) || 0;
     }
-}

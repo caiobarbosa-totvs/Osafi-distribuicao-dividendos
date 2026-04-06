@@ -10,7 +10,7 @@ function createDataset(fields, constraints, sortFields) {
     // 2. Parâmetros Oficiais do RM
     var codSentenca = "FLUIG.023";
     var codColigada = 0; // 
-    var codSistema = "T";
+    var codAplicacao = "T";
  	var coligada = ""; // parâmetro SQL
 
     // Captura a coligada enviada como filtro pelo Front-end
