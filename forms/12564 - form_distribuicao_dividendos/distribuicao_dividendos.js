@@ -789,6 +789,65 @@ function gerarAtaPDF() {
         timeout: 'fast'
     });
 
-    // 4. Aqui chamaremos o esqueleto do documento (Faremos isso na Missão 4)
-    // desenharEsqueletoPDF(dadosAta);
+    // 4. Aqui chamaremos o esqueleto do documento
+    desenharEsqueletoPDF(dadosAta);
+
+    // ==========================================================================
+    // ESQUELETO DO DOCUMENTO (Fábrica pdfmake)
+    // ==========================================================================
+
+    function desenharEsqueletoPDF(dadosAta) {
+        console.log("[FÁBRICA PDF] Iniciando o desenho do esqueleto do documento...");
+
+        // 1. Tratamento de Dados (Formatação de Data para o padrão Brasileiro)
+        var dataFormatada = dadosAta.data ? dadosAta.data.split('-').reverse().join('/') : "Data não informada";
+
+        // 2. A Estrutura Mestra (Document-definition-object)
+        var docDefinition = {
+            pageSize: 'A4',
+            pageMargins: [2, 3], // [Esquerda, Topo, Direita, Baixo]
+
+            // 3. O Conteúdo (A injeção das variáveis no texto legal)
+            content: [
+                // CABEÇALHO
+                { text: 'ATA DE DISTRIBUIÇÃO DE DIVIDENDOS', style: 'header', alignment: 'center' },
+                { text: dadosAta.empresa.toUpperCase(), style: 'subheader', alignment: 'center', margin: [4] },
+
+                // TÓPICO 1: PREÂMBULO LEGAL
+                { text: '1. DADOS DA REUNIÃO', style: 'topic' },
+                { text: 'Aos ' + dataFormatada + ', às ' + dadosAta.horario + ' horas, reuniram-se os representantes e sócios em ' + dadosAta.local + ' para deliberação financeira das contas da empresa.' },
+                { text: '', margin: [5] }, // Espaçador
+
+                // TÓPICO 2: DELIBERAÇÕES
+                { text: '2. DELIBERAÇÕES E RESULTADOS', style: 'topic' },
+                { text: 'A Diretoria apresentou o balanço e a demonstração de resultados do período compreendido entre ' + dadosAta.periodo + '.' },
+                { text: '• Resultado Líquido Apurado: R$ ' + dadosAta.resultado, margin: [5, 6] },
+                { text: '• Total Disponível para Distribuição: R$ ' + dadosAta.disponivel, margin: [5, 7, 8] },
+                { text: 'Justificativa e Impacto Financeiro: ' + dadosAta.justificativa, margin: [5] },
+
+                // TÓPICO 3: A TABELA DE DISTRIBUIÇÃO
+                { text: '3. QUADRO DE DISTRIBUIÇÃO AOS SÓCIOS', style: 'topic', margin: [6, 8] },
+                { text: 'Fica aprovada a distribuição do valor supramencionado, em moeda corrente, respeitando as proporções do quadro de rateio.', margin: [8] },
+
+                // ⚠️ AQUI ENTRARÁ A INTELIGÊNCIA DA MISSÃO 5 (O LAÇO DE REPETIÇÃO)
+                { text: '[A tabela dinâmica de sócios será desenhada aqui na próxima missão...]', color: 'red', italics: true, alignment: 'center', margin: [4] },
+
+                // TÓPICO 4: ENCERRAMENTO E ASSINATURAS
+                { text: '\n\nNada mais havendo a tratar, a reunião foi encerrada, lavrando-se a presente Ata que vai assinada pelos representantes e conformada pela Controladoria.' },
+                { text: '\n\n\n\n__________________________________________________\nRepresentante Legal / Diretoria', alignment: 'center' }
+            ],
+
+            // 4. O "CSS" do PDF (Dicionário de Estilos)
+            styles: {
+                header: { fontSize: 16, bold: true, color: '#333333' },
+                subheader: { fontSize: 13, bold: true, color: '#004578' }, // Cor base TOTVS
+                topic: { fontSize: 11, bold: true, color: '#000000', margin: [6, 8] }
+            }
+        };
+
+        console.log("[FÁBRICA PDF] Esqueleto montado! Renderizando no navegador...");
+
+        // 5. O Gatilho Final: Gera o PDF e abre em uma nova aba do navegador
+        pdfMake.createPdf(docDefinition).open();
+    }
 }
