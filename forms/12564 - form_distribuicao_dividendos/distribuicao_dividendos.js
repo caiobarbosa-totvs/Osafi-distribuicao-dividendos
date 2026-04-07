@@ -764,7 +764,8 @@ function gerarAtaPDF() {
         periodo: $('#periodoReferenciaAta').val(),
         resultado: $('#resultadoLiquido').val(),
         disponivel: $('#totalDisponivel').val(),
-        justificativa: $('#justificativaAta').val()
+        justificativa: $('#justificativaAta').val(),
+        origem: $('input[name="origemLucro"]:checked').val() || "sem_deliberacao" // Captura a origem do lucro
     };
 
     // 2. Trava de Segurança Sênior (Validação)
@@ -791,70 +792,119 @@ function gerarAtaPDF() {
 
     // 4. Aqui chamaremos o esqueleto do documento
     desenharEsqueletoPDF(dadosAta);
+}
 
+// ==========================================================================
+// MISSÃO 4 e 5: O ESQUELETO E AS TABELAS INTELIGENTES (pdfmake)
+// ==========================================================================
 
-    // ==========================================================================
-    // ESQUELETO DO DOCUMENTO (Fábrica pdfmake)
-    // ==========================================================================
+function desenharEsqueletoPDF(dadosAta) {
+    console.log("[FÁBRICA PDF] Construindo esqueleto com Tabelas Inteligentes...");
 
-    function desenharEsqueletoPDF(dadosAta) {
-        console.log("[FÁBRICA PDF] Iniciando o desenho do esqueleto do documento...");
+    var dataFormatada = dadosAta.data ? dadosAta.data.split('-').reverse().join('/') : "Data não informada";
+    var contentArray = [];
 
-        // 1. Tratamento de Dados (Formatação de Data para o padrão Brasileiro)
-        var dataFormatada = dadosAta.data ? dadosAta.data.split('-').reverse().join('/') : "Data não informada";
+    // --- BLOCO 1: CABEÇALHO ---
+    var tituloAta = (dadosAta.origem === 'consolidacao') ? 'ATA DE CONSOLIDAÇÃO DE ANTECIPAÇÕES' : 'ATA DE DISTRIBUIÇÃO DE DIVIDENDOS';
 
-        // 2. A Estrutura Mestra (Document-definition-object)
-        var docDefinition = {
-            pageSize: 'A4',
+    contentArray.push({ text: tituloAta, style: 'header', alignment: 'center', margin: [0, 0, 0, 10] });
+    contentArray.push({ text: dadosAta.empresa.toUpperCase(), style: 'subheader', alignment: 'center', margin: [0, 0, 0, 20] });
 
-            // CORREÇÃO 1: Margens profissionais [Esquerda, Topo, Direita, Baixo]
-            pageMargins: [40, 60, 40, 60],
+    // --- BLOCO 2: PREÂMBULO LEGAL COMUM ---
+    contentArray.push({ text: '1. DADOS DA REUNIÃO', style: 'topic' });
+    contentArray.push({ text: 'Aos ' + dataFormatada + ', às ' + dadosAta.horario + ' horas, reuniram-se os representantes e sócios em ' + dadosAta.local + ' para deliberação financeira das contas da empresa.', margin: [0, 0, 0, 15] });
 
-            // 3. O Conteúdo (A injeção das variáveis no texto legal)
-            content: [
-                // CABEÇALHO (Ajustado margin-bottom para desgrudar do texto e não invadir o topo)
-                { text: 'ATA DE DISTRIBUIÇÃO DE DIVIDENDOS', style: 'header', alignment: 'center', margin: [0, 0, 0, 5] },
-                { text: dadosAta.empresa.toUpperCase(), style: 'subheader', alignment: 'center', margin: [0, 0, 0, 25] },
+    // --- BLOCO 3 e 4: REGRAS ESPECÍFICAS E TABELAS DINÂMICAS ---
+    if (dadosAta.origem === 'consolidacao') {
+        contentArray.push({ text: '2. DELIBERAÇÕES DE CONSOLIDAÇÃO', style: 'topic' });
+        contentArray.push({ text: 'A Diretoria apresentou o balanço final do exercício, consolidando as antecipações financeiras realizadas durante o período de ' + dadosAta.periodo + '.', margin: [0, 0, 0, 10] });
+        contentArray.push({ text: 'Justificativa e Confirmação de Regularidade Fiscal: ' + dadosAta.justificativa, margin: [0, 0, 0, 15] });
 
-                // TÓPICO 1: PREÂMBULO LEGAL
-                { text: '1. DADOS DA REUNIÃO', style: 'topic' },
-                { text: 'Aos ' + dataFormatada + ', às ' + dadosAta.horario + ' horas, reuniram-se os representantes e sócios em ' + dadosAta.local + ' para deliberação financeira das contas da empresa.', margin: [0, 0, 0, 15] },
+        contentArray.push({ text: '3. HISTÓRICO DE PAGAMENTOS ANTECIPADOS', style: 'topic' });
+        contentArray.push({ text: 'Fica aprovada a consolidação dos valores supramencionados. Abaixo segue o histórico auditado de todas as antecipações liquidadas no exercício:', margin: [0, 0, 0, 10] });
 
-                // TÓPICO 2: DELIBERAÇÕES
-                { text: '2. DELIBERAÇÕES E RESULTADOS', style: 'topic' },
-                { text: 'A Diretoria apresentou o balanço e a demonstração de resultados do período compreendido entre ' + dadosAta.periodo + '.', margin: [0, 0, 0, 8] },
+        var corpoTabelaHistorico = [];
+        corpoTabelaHistorico.push([
+            { text: 'Data Ref.', style: 'tableHeader' },
+            { text: 'Sócio Beneficiado', style: 'tableHeader' },
+            { text: 'Valor Antecipado', style: 'tableHeader', alignment: 'right' },
+            { text: 'Protocolo Bancário', style: 'tableHeader' }
+        ]);
 
-                // Listas com pequeno recuo à esquerda [10]
-                { text: '• Resultado Líquido Apurado: R$ ' + dadosAta.resultado, margin: [10, 0, 0, 3] },
-                { text: '• Total Disponível para Distribuição: R$ ' + dadosAta.disponivel, margin: [10, 0, 0, 10] },
+        $("input[id^='pagDataProgramada___']").each(function () {
+            var linha = $(this).attr('id').split('___')[1];
+            var dataEfetiva = $("#pagDataEfetiva___" + linha).val() || $("#pagDataProgramada___" + linha).val() || "-";
+            var dataEfetivaBR = dataEfetiva !== "-" ? dataEfetiva.split('-').reverse().join('/') : "-";
+            var favorecido = $("#pagFavorecido___" + linha).val() || "Sócio";
+            var valorAntecip = $("#pagValorAntecipado___" + linha).val() || $("#pagValorBruto___" + linha).val() || "0,00";
+            var protocolo = $("#pagProtocolo___" + linha).val() || "-";
 
-                { text: 'Justificativa e Impacto Financeiro: ' + dadosAta.justificativa, margin: [0, 0, 0, 15] },
+            corpoTabelaHistorico.push([
+                dataEfetivaBR, favorecido, { text: 'R$ ' + valorAntecip, alignment: 'right' }, protocolo
+            ]);
+        });
 
-                // TÓPICO 3: A TABELA DE DISTRIBUIÇÃO
-                { text: '3. QUADRO DE DISTRIBUIÇÃO AOS SÓCIOS', style: 'topic' },
-                { text: 'Fica aprovada a distribuição do valor supramencionado, em moeda corrente, respeitando as proporções do quadro de rateio.', margin: [0, 0, 0, 15] },
+        contentArray.push({ style: 'tableExample', table: { headerRows: 1, widths: ['auto', '*', 'auto', 'auto'], body: corpoTabelaHistorico }, layout: 'lightHorizontalLines' });
 
-                // ⚠️ AQUI ENTRARÁ A INTELIGÊNCIA DA PRÓXIMA ETAPA
-                // Aplicada grande margem superior e inferior para isolar o quadro
-                { text: '[A tabela dinâmica de sócios será desenhada aqui na próxima missão...]', color: 'red', italics: true, alignment: 'center', margin: [0, 30, 0, 40] },
+        contentArray.push({ text: '4. QUADRO CONSOLIDADO POR SÓCIO', style: 'topic', margin: [0, 15, 0, 5] });
+        contentArray.push({ text: 'Totalização final dos valores consolidados e transformados em distribuição efetiva de lucros:', margin: [0, 0, 0, 10] });
 
-                // TÓPICO 4: ENCERRAMENTO E ASSINATURAS
-                { text: 'Nada mais havendo a tratar, a reunião foi encerrada, lavrando-se a presente Ata que vai assinada pelos representantes e conformada pela Controladoria.', margin: [0, 0, 0, 50] },
-                { text: '__________________________________________________\nRepresentante Legal / Diretoria', alignment: 'center' }
-            ],
+    } else {
+        contentArray.push({ text: '2. DELIBERAÇÕES E RESULTADOS', style: 'topic' });
+        contentArray.push({ text: 'A Diretoria apresentou o balanço e a demonstração de resultados do período compreendido entre ' + dadosAta.periodo + '.', margin: [0, 0, 0, 10] });
+        contentArray.push({ text: '• Resultado Líquido Apurado: R$ ' + dadosAta.resultado, margin: [10, 0, 0, 5] });
+        contentArray.push({ text: '• Total Disponível para Distribuição: R$ ' + dadosAta.disponivel, margin: [10, 0, 0, 10] });
+        contentArray.push({ text: 'Justificativa, Impacto Financeiro e Conformidade Legal: ' + dadosAta.justificativa, margin: [0, 0, 0, 15] });
 
-            // 4. O "CSS" do PDF (Dicionário de Estilos)
-            // CORREÇÃO 3: Ajuste fino para os tópicos espaçarem os blocos de forma fluida
-            styles: {
-                header: { fontSize: 16, bold: true, color: '#333333' },
-                subheader: { fontSize: 13, bold: true, color: '#004578' },
-                topic: { fontSize: 12, bold: true, color: '#000000', margin: [0, 15, 0, 5] } // Tópicos sempre dão um salto maior no topo
-            }
-        };
-
-        console.log("[FÁBRICA PDF] Esqueleto montado! Renderizando no navegador...");
-
-        // 5. O Gatilho Final: Gera o PDF e abre em uma nova aba do navegador
-        pdfMake.createPdf(docDefinition).open();
+        contentArray.push({ text: '3. QUADRO DE DISTRIBUIÇÃO AOS SÓCIOS', style: 'topic' });
+        contentArray.push({ text: 'Fica aprovada a distribuição do valor supramencionado, em moeda corrente, respeitando as cláusulas padrão de conformidade e as proporções do quadro de rateio abaixo:', margin: [0, 0, 0, 10] });
     }
+
+    var corpoTabelaSocios = [];
+    corpoTabelaSocios.push([
+        { text: 'Sócio / Favorecido', style: 'tableHeader' },
+        { text: 'CPF / CNPJ', style: 'tableHeader' },
+        { text: '% Aplicado', style: 'tableHeader', alignment: 'center' },
+        { text: 'Valor Creditado', style: 'tableHeader', alignment: 'right' }
+    ]);
+
+    $("input[id^='cpfCnpjSocio___']").each(function () {
+        var linha = $(this).attr('id').split('___')[1];
+        var nomeSocioStr = $("#nomeSocio___" + linha).val() || "Sócio não identificado";
+        var cpfCnpj = $(this).val() || "-";
+        var percDist = $("#percDistSocio___" + linha).val() || $("#percCapitalSocio___" + linha).val() || "0,00";
+        var valorSocio = $("#valorSocio___" + linha).val() || "0,00";
+
+        corpoTabelaSocios.push([
+            nomeSocioStr, cpfCnpj, { text: percDist + '%', alignment: 'center' }, { text: 'R$ ' + valorSocio, alignment: 'right' }
+        ]);
+    });
+
+    contentArray.push({ style: 'tableExample', table: { headerRows: 1, widths: ['*', 'auto', 'auto', 'auto'], body: corpoTabelaSocios }, layout: 'lightHorizontalLines' });
+
+    contentArray.push({ text: 'Nada mais havendo a tratar, a reunião foi encerrada, lavrando-se a presente Ata que vai assinada pelos representantes e conformada pela Controladoria, não restando linhas ou espaços em branco.', margin: [0, 20, 0, 20] });
+    contentArray.push({ text: '__________________________________________________\nRepresentante Legal / Diretoria', alignment: 'center' });
+
+    // 6. ESTRUTURAÇÃO FINAL E ESTILIZAÇÃO DO PDF
+    var docDefinition = {
+        pageSize: 'A4',
+        pageMargins: [40, 60, 40, 60], // [Esquerda, Topo, Direita, Baixo]
+
+        footer: function (currentPage, pageCount) {
+            return { text: 'Página ' + currentPage.toString() + ' de ' + pageCount, alignment: 'right', margin: [0, 0, 40, 0], fontSize: 9, color: '#666666' };
+        },
+
+        content: contentArray,
+
+        styles: {
+            header: { fontSize: 16, bold: true, color: '#333333' },
+            subheader: { fontSize: 13, bold: true, color: '#004578' },
+            topic: { fontSize: 11, bold: true, color: '#000000', margin: [0, 15, 0, 5] },
+            tableHeader: { bold: true, fontSize: 10, color: 'black', fillColor: '#e6e6e6', margin: [0, 5, 0, 5] },
+            tableExample: { margin: [0, 10, 0, 15] }
+        }
+    };
+
+    console.log("[FÁBRICA PDF] Documento Sênior Estruturado! Renderizando...");
+    pdfMake.createPdf(docDefinition).open();
 }
